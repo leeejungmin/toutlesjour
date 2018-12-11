@@ -1,0 +1,104 @@
+{
+
+    "gender": "female",
+    "firstName": "leedde",
+    "lastName": "leeeeee",
+    "birthName": "",
+    "birthDate": "",
+    "birthAddress": {
+        "formattedAddress": "ceci est une adresse de naissance",
+        "country": "",
+        "city": "",
+        "streetNumber": "",
+        "street": "",
+        "zipCode": "",
+        "administrativeAreaLevel1": "",
+        "administrativeAreaLevel2": "",
+        "latitude": "",
+        "longitude": ""
+    },
+    "nationality": "",
+    "address": {
+        "formattedAddress": "ceci est une adresse",
+        "country": "",
+        "city": "",
+        "streetNumber": "",
+        "street": "",
+        "zipCode": "",
+        "administrativeAreaLevel1": "",
+        "administrativeAreaLevel2": "",
+        "latitude": "",
+        "longitude": ""
+    },
+    "contactInfo": {
+        "emails": [
+            {
+                "address": "ljm3453@gmail.com",
+                "isMain": true,
+                "type": "personal"
+            }
+        ],
+        "phones": [
+            {
+                "number": "789-789-654",
+                "isMain": true,
+                "type": "personal"
+            }
+        ]
+    },
+    "photo": {
+        "employeeId": "c67a1c2d-0785-4873-891c-47b51b99394c",
+        "name": "une photo",
+        "type": "photo",
+        "accessType": "public",
+        "contentType": "image/png",
+        "length": 90856,
+        "location": "employee/c67a1c2d-0785-4873-891c-47b51b99394c/photo-1542101286.png",
+        "registeredDate": "2018-11-13T09:28:06.129Z",
+        "thumbnails": [
+            {
+                "height": 75,
+                "width": 75,
+                "location": "employee/c67a1c2d-0785-4873-891c-47b51b99394c/photo-75x75-1542101286.png"
+            },
+            {
+                "height": 170,
+                "width": 170,
+                "location": "employee/c67a1c2d-0785-4873-891c-47b51b99394c/photo-170x170-1542101286.png"
+            }
+        ],
+        "archivedDate": "",
+        "id": "11123770-4955-4d5b-8d0f-9a9125870eb8",
+        "tenantId": "00000000-0000-0000-0000-000000000000",
+        "createdBy": "",
+        "updatedBy": "",
+        "createdAt": "0001-01-01T00:00:00Z",
+        "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    "organizationId": "",
+    "managers": "",
+    "userId": "",
+    "archivedDate": "",
+    "id": "2ca0d433-1f83-4d37-b99a-464e285df4ae",
+    "tenantId": "ecc7f908-1e92-4627-a5f7-06d3efd2b97e",
+    "createdBy": {
+        "id": "9f615c47-4aad-4063-9f4c-359ccfc6d67c",
+        "employeeId": """",
+        "givenName": "Zakaria",
+        "familyName": "ABIDI",
+        "culture": """",
+        "picture": "",
+        "email": "zabidi@digi-paye.com"
+    },
+    "updatedBy": {
+        "id": "9f615c47-4aad-4063-9f4c-359ccfc6d67c",
+        "employeeId": """",
+        "givenName": "Zakaria",
+        "familyName": "ABIDI",
+        "culture": "",
+        "picture": "",
+        "email": "zabidi@digi-paye.com"
+    },
+    "createdAt": "2018-11-13T09:28:06.293Z",
+    "updatedAt": "2018-11-13T09:28:06.293Z"
+}

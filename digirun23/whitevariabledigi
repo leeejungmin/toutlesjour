@@ -1,0 +1,550 @@
+{% extends "::app-layout.html.twig" %}
+
+{% import 'AppBundle:Component:datatable.html.twig' as datatable %}
+
+{% block head %}
+
+    {% block title %}
+        {{ 'Variables'|trans }}
+    {% endblock %}
+
+{% endblock %}
+
+
+{% block pageContent %}
+    <div id="show_hide_filter">
+        <button id="show_hide_filter_button" type="button" class="btn btn-default btn-sm">{{ 'hide_filter'|trans }}</button>
+    </div>
+    <div class="portlet light bordered contactExcel">
+        <div class="portlet-title">
+            <div class="caption" id="titleDate">
+                {{ start|intl_date('MMMM y') }}
+
+                {% if closureStatus == 0 %}
+                    <span class="label label-success"><i class="fa fa-unlock"></i> {{ 'help.variable.closure_open'|trans }}</span>
+                {% elseif closureStatus > 0 %}
+                    <span class="label label-success"><i class="fa fa-lock"></i> {{ 'help.variable.closure_validated'|trans }}</span>
+                {% endif %}
+            </div>
+            <div class="actions">
+                {% block actions %}
+                    <a class='btn' href="{{ path('app_company_variable_whitebrand', { 'company': company.id, 'start': start|date_modify('-1 month')|date('Y-m-d') } )}}">
+                        <i class="fa fa-chevron-left"></i> {{ 'action.previous_month'|trans }} </a>
+
+                    <a class='btn' href="{{ path('app_company_variable_whitebrand', { 'company': company.id, 'start': start|date_modify('+1 month')|date('Y-m-d') } )}}">
+                        {{ 'action.next_month'|trans }} <i class="fa fa-chevron-right"></i></a>
+                {% endblock %}
+            </div>
+        </div>
+     <div id="hide_show_layout">
+        <h4>Filtrer le tableau</h4>
+
+        <div id="variables_excel_selects" class="form-group ">
+            <div class="table-filter-wrapper">
+                <select class="form-control" id="select-departement" data-live-search="true">
+                    <option value="0" data-tokens="">Filtrer par Départment</option>
+                    {% for valueDept  in  departements %}
+                        <option value="{{ valueDept.id }}" data-tokens="{{ valueDept.title }}">{{ valueDept.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <br />
+            <div class="table-filter-wrapper">
+                <select class="form-control" id="select-service" data-live-search="true">
+                    <option value="0" data-tokens="">Filtrer par service</option>
+                    {% for valueServ  in  services %}
+                        <option value="{{ valueServ.id }}" data-tokens="{{ valueServ.title }}">{{ valueServ.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <br />
+            <div class="table-filter-wrapper">
+                <select class="form-control" id="select-unit" data-live-search="true">
+                    <option value="0" data-tokens="">Filtrer par unit</option>
+                    {% for valueUnit  in  units %}
+                        <option value="{{ valueUnit.id }}" data-tokens="{{ valueUnit.title }}">{{ valueUnit.title }}</option>
+                    {% endfor %}
+                </select><br>
+            </div>
+            <div class="form-actions btn-save">
+                <button name="variable_excel_save" id="variable_excel_save" class="btn btn-primary">{{ 'form.label.variable.save'|trans }}</button>
+            </div>
+            <div class="form-actions" id="changeMonthCopy">
+                <div class="second-container">
+
+                    <div class="input-group date date-picker-copy" data-date-format="mm/yyyy">
+                        <input id="changeDate" name="variable[validFrom]" required="required" class="form-control" value="" type="text">
+                        <span class="input-group-btn"><button class="btn default date-set" type="button"><i class="fa fa-calendar"></i></button></span>
+                    </div>
+                </div>
+                <div>
+                    <button name="variable_excel_save_copy" id="variable_excel_save_copy" class="btn btn-primary">Copier</button>
+                </div>
+            </div><br><br>
+        </div>
+     </div>
+        <div id="whitebrandvariablesTextResizingContainer">
+            <div id="leftContainer">
+                <select id="text-resizing">
+                    <option value="huge">{{ 'variable.white.brand.page.container_huge'|trans }}</option>
+                    <option value="big">{{ 'variable.white.brand.page.container_big'|trans }}</option>
+                    <option value="normal" selected>{{ 'variable.white.brand.page.container_normal'|trans }}</option>
+                    <option value="small">{{ 'variable.white.brand.page.container_small'|trans }}</option>
+                    <option value="very-small">{{ 'variable.white.brand.page.container_very_small'|trans }}</option>
+                </select>
+            </div>
+            <div id="rightContainer">
+                {{ 'variable.white.brand.page.text.size.message'|trans }} :
+            </div>
+        </div>
+
+        <div id="variableexcelcontainer" class="variable-white-brand-page-container normal">
+            <div id="hot"></div>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block pagescript %}
+    <script src="/js/ZeroClipboard.min.js"></script>
+    <script>
+        var hot;
+        //We need the ID of the last column to hide it (Comment Column)
+        var commentColumnIdToHide;
+        $(document).ready(function() {
+            if(localStorage.getItem('planningShowHideFiltersFlag')!= undefined){
+                if(localStorage.getItem('planningShowHideFiltersFlag') =="yes"){
+                    $('.table-container .table-filter-wrapper ,#hide_show_layout').hide(800);
+                    $('#show_hide_filter_button').html('Afficher les filtres');
+                }
+            }
+
+            //Show and hide Filters
+            $('#show_hide_filter_button').click(function(){
+                if($('.table-filter-wrapper').is(":visible") === true){
+                    localStorage.setItem('planningShowHideFiltersFlag', 'yes');
+                    $('#show_hide_filter_button').html('Afficher les filtres');
+                }else{
+                    localStorage.setItem('planningShowHideFiltersFlag', '');
+                    $('#show_hide_filter_button').html('Cacher les filtres');
+                }
+                $('.table-container .table-filter-wrapper ,#hide_show_layout').toggle(800);
+            });
+
+            $("#changeDate [value='0']").attr("selected","selected");
+            $("#select-departement [value='0']").attr("selected","selected");
+            $("#select-service [value='0']").attr("selected","selected");
+            $("#select-unit [value='0']").attr("selected","selected");
+
+            function getHeaders(returnJson) {
+                var cols = [];
+                var j = 0;
+                $(returnJson).each(function (i, val) {
+                    if(j <= 1){
+                        $.each(val, function (k, v) {
+                            cols[j] = k;
+                            j++;
+                        });
+                    }
+                });
+                return cols;
+            }
+
+            function getColumns(returnJson) {
+                var dynamicColumns = [];
+                var j = 0;
+                var x=0;
+                var statusClo = "";
+                var validCopy = "";
+                var role    = {{ userChecker }};
+                var cloture = {{ closureStatus }};
+
+                $(returnJson).each(function (i, val) {
+                    if(x == returnJson.length-2){
+                        statusClo = val.closureStatus;
+                    }
+                    if(x == returnJson.length-1){
+                        validCopy = val.validCopy;
+                        if(validCopy == 0){
+                            $("#changeMonthCopy").show();
+                        }
+                    }
+                    x++;
+                });
+
+                $(returnJson).each(function (i, val) {
+                    if(j <= 1){
+                        $.each(val, function (k, v) {
+                            var col = new Object();
+                            col.data = k;
+
+                            //Defining the cols type !
+                            if(k=='Commentaires<span class=\"veahcc\">99999</span>'){
+                                col.type = "text";
+                                col.hidden = false;
+                            }else if(k=='Salaire Brut'){
+                                col.type = "text";
+                                col.editor = false;
+                            }else if(k=="Matricule"){
+                                col.type = "text";
+                                col.editor = false;
+                            }else if(k=="Employé"){
+                                col.type = "text";
+                                col.editor = false;
+                            }else if(k=="Fin de contrat"){
+                                col.type = "text";
+                                col.editor = false;
+                            }else{
+                                //For the other's values
+                                col.type = "numeric";
+                                col.numericFormat = {
+                                    pattern: '0,0.00',
+                                    //pattern: '0,0.00 $',
+                                    //culture: 'de-DE' // use this for EUR (German),
+                                    // more cultures available on http://numbrojs.com/languages.html
+                                };
+                            }
+
+                        //If the period is not closed
+                            var validity_access = 0;
+
+                            if(cloture!=0){
+                                if(role == 1){
+                                    //if the user is Pay_Admin
+                                    validity_access = 1;
+                                }else{
+                                    validity_access = 0;
+                                }
+                            }else if(cloture==0){
+                                //The period is open
+                                validity_access = 1;
+                            }else{
+                                //The period is closed
+                                validity_access = 0;
+                            }
+
+                            //Disable the edition !
+                            if(validity_access==0){
+                                //Disable the editor
+                                col.editor = false;
+                                //Disable the save button
+                                var saveButton = document.getElementById("variable_excel_save");
+                                $(saveButton).attr("disabled","disabled");
+                            }
+
+                            dynamicColumns.push(col);
+                            j++;
+
+                            commentColumnIdToHide=j;
+                        });
+                    }
+                });
+
+                //Get the length-1
+                //Hide the comment cell "99999"
+                //commentColumnIdToHide--;
+
+                return dynamicColumns;
+            }
+
+            $('#variables_excel_selects select').change(function() {
+                var deptID = $("#select-departement").val();
+                var servID = $("#select-service").val();
+                var unitID = $("#select-unit").val();
+                var dataSend  = 'deptID='+deptID+'&servID='+servID+'&unitID='+unitID;
+                var path = "{{ path('app_company_variable_filterbytabexcel', {'company': company.id, 'start': start|date('Y-m-d') } ) }}";
+                $.ajax({
+                    url: path,
+                    dataType: 'json',
+                    type: 'GET',
+                    data : dataSend,
+                    success: function (res) {
+                        loadData(res);
+                    }
+                });
+            });
+
+            //Get the rows number !
+            function rowsDataJson(returnJson){
+                return returnJson.length-2;
+            }
+
+            function loadDataTableExcel(){
+                var path = "{{ path('app_company_variable_filterbytabexcel', {'company': company.id, 'start': start|date('Y-m-d') }  ) }}";
+                $.ajax({
+                    url: path,
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function (res) {
+                        //var parameters = JSON.parse(JSON.stringify(res));
+                        if(res.length>1){
+                            loadData(res);
+                        }else{
+                            document.getElementById("variable_excel_save").disabled = true;
+                        }
+                    }
+                });
+            }
+
+            // save data sorting in a local storage
+            function setSort(column, order) {
+                var finalColumn="";
+                var finalOrder="";
+                if(order===true){
+                    //True => ASC
+                    finalColumn=column;
+                    //finalOrder="asc";
+                    finalOrder= true;
+                }else if(order===false){
+                    //False => DESC
+                    finalColumn=column;
+                    //finalOrder="desc"; => for the 6.2 we must use desc or false
+                    finalOrder=false;
+                }
+                else{
+                    //Undefined => we set by default column 1 order asc
+                    finalColumn=1;
+                    finalOrder= true;
+                }
+                localStorage.setItem("whiteBrandVariableOrderColumn", finalColumn);
+                localStorage.setItem("whiteBrandVariableOrderDirection", finalOrder);
+            }
+
+            function getSavedSort() {
+                if(hot!=undefined){
+                    if(localStorage.getItem("whiteBrandVariableOrderColumn")!=null){
+                        finalColumn = localStorage.getItem("whiteBrandVariableOrderColumn");
+                        finalColumnDirection = localStorage.getItem("whiteBrandVariableOrderDirection");
+                    }else{
+                        var finalColumn = 1;
+                        var finalColumnDirection = true;
+                    }
+
+                    // update sorting when loading page
+                    hot.updateSettings({
+                        columnSorting: {
+                            column: parseInt(finalColumn),
+                            sortOrder: JSON.parse(finalColumnDirection)
+                        }
+                    });
+                }
+            }
+
+            function loadData(returnJson){
+                $('#hot').html('');
+                var saveButton = document.getElementById("variable_excel_save");
+                var saveButtonCopy = document.getElementById("variable_excel_save_copy");
+                var hotElement = document.querySelector('#hot');
+                var hotSettings = {
+                    data: returnJson,
+                    columns:  getColumns(returnJson),
+                    fixedColumnsLeft: 4,
+                    stretchH: 'all',
+                    autoWrapRow: true,
+                    width: '',
+                    height: 487,
+                    maxRows: rowsDataJson(returnJson),
+                    manualRowResize: true,
+                    manualColumnResize: true,
+                    rowHeaders: true,
+                    colHeaders: getHeaders(returnJson),
+                    manualRowMove: true,
+                    manualColumnMove: true,
+                    sortIndicator: true,
+                    /*contextMenu: true,*/
+                    /*contextMenu: ['make_read_only', 'alignment', 'undo', 'redo'],
+                    filters: true,*/
+                    /*dropdownMenu: true,*/
+                    hiddenColumns: {
+                        columns: [0, commentColumnIdToHide]
+                        /*indicators: true*/
+                    },
+                    afterCreateRow: function (index, amount) {
+                        data.splice(index, amount);
+                    },
+                    beforeChange: function (changes, source) {
+                        lastChange = changes;
+                    },
+                    afterColumnSort: function (column, order) {
+                        setSort(column, order);
+                    }
+                };
+
+                var lastChange = null;
+                hot = new Handsontable(hotElement, hotSettings);
+                //Add the Save Listner
+                Handsontable.dom.addEvent(saveButton, 'click', function() {
+                    var path = "{{ path('app_company_variable_savetabexcel', {'company': company.id, 'start': start|date('Y-m-d') }  ) }}";
+                    //$(saveButton).attr("disabled","disabled");
+                    $.ajax({
+                        url: path,
+                        data: JSON.stringify(hot.getSourceData()),
+                        dataType: 'json',
+                        type: 'POST',
+                        beforeSend: function(xhr){
+                            $(saveButton).prop("disabled",true);
+                            $(saveButtonCopy).prop("disabled",true);
+                            $("body").css("cursor", "progress");
+                        },
+                        success: function (res) {
+                            //var parameters = JSON.parse(JSON.stringify(res));
+                            //$(saveButton).removeAttr("disabled");
+                            location.reload();
+                        },
+                        statusCode: {
+                            403: function() {
+                                alert('Erreur lors de l\'enregistrement, merci de vérifier les valeurs renseignées en fonction des employés');
+                                $(saveButton).prop("disabled",false);
+                                $(saveButtonCopy).prop("disabled",false);
+                                $("body").css("cursor", "default");
+                            }
+                        },
+                        fail: (function(jqXHR, textStatus){
+                            alert('Erreur lors de l\'enregistrement');
+                            $(saveButton).prop("disabled",false);
+                            $(saveButtonCopy).prop("disabled",false);
+                            $("body").css("cursor", "default");
+                        }),
+                        done: (function(){
+                            $(saveButton).prop("disabled",false);
+                            $(saveButtonCopy).prop("disabled",false);
+                            $("body").css("cursor", "default");
+                        })
+                    });
+                });
+                $(saveButtonCopy).on("click", function() {
+                    var   select = $("#changeDate").val();
+                    if(select != ''){
+                        var dataSend  = 'deptID=0&servID=0&unitID=0&dateCopy='+select;
+                        var path = "{{ path('app_company_variable_filterbytabexcel', {'company': company.id, 'start': '2018-01-01'  } ) }}";
+                        $.ajax({
+                            url: path,
+                            dataType: 'json',
+                            type: 'GET',
+                            data : dataSend,
+                            beforeSend: function(xhr){
+                                $(saveButton).prop("disabled",true);
+                                $(saveButtonCopy).prop("disabled",true);
+                                $("body").css("cursor", "progress");
+                            },
+                            success: function (res) {
+                                var path = "{{ path('app_company_variable_savetabexcel', {'company': company.id, 'start': start|date('Y-m-d') }  ) }}";
+                                $.ajax({
+                                    url: path,
+                                    data: JSON.stringify(res),
+                                    dataType: 'json',
+                                    type: 'POST',
+                                    success: function (res) {
+                                        location.reload();
+                                    }
+                                });
+                            },
+                            statusCode: {
+                                403: function() {
+                                    alert('Erreur lors de l\'enregistrement, merci de vérifier les valeurs renseignées en fonction des employés');
+                                    $(saveButton).prop("disabled",false);
+                                    $(saveButtonCopy).prop("disabled",false);
+                                    $("body").css("cursor", "default");
+                                }
+                            },
+                            fail: (function(jqXHR, textStatus){
+                                alert('Erreur lors de l\'enregistrement');
+                                $(saveButton).prop("disabled",false);
+                                $(saveButtonCopy).prop("disabled",false);
+                                $("body").css("cursor", "default");
+                            }),
+                            done: (function(){
+                                $(saveButton).prop("disabled",false);
+                                $(saveButtonCopy).prop("disabled",false);
+                                $("body").css("cursor", "default");
+                            })
+                        });
+                    }
+                });
+
+                //Disable Button "Delete" and "Backrow"
+                hot.updateSettings({
+                    beforeKeyDown: function (e) {
+                        if (e.keyCode === 46 || e.keyCode === 8) {
+                            //Handsontable.Dom.enableImmediatePropagation(e);
+                            e.stopImmediatePropagation();
+                        }
+                    }
+                });
+                //Get order from session
+                getSavedSort();
+            }
+            //Init the Table !
+            loadDataTableExcel();
+            Digipay.init();
+
+            //Configuration of the DatePicker
+            $('#changeDate').datepicker( {
+                altField: "#changeDate",
+                closeText: 'Valider',
+                prevText: 'Précédent',
+                nextText: 'Suivant',
+                showButtonPanel: false,
+                currentText: '',
+                language: 'fr',
+                autoclose: true,
+                format: "dd-mm-yyyy",
+                viewMode: "months",
+                minViewMode: "months",
+                changeMonth: true,
+                changeYear: true,
+                showButtonPanel: true,
+                onClose: function(dateText, inst) {
+                    $(this).datepicker('setDate', new Date(inst.selectedYear, inst.selectedMonth, 1));
+                }
+            });
+
+            //Close the Datepicker after the choose
+            $('changeDate').on('changeDate', function(ev){
+                $(this).datepicker('hide');
+            });
+
+            //Change fontSize from the menu list
+            $('#text-resizing').change(function() {
+                document.getElementById("variableexcelcontainer").className = "variable-white-brand-page-container "+$("#text-resizing").val();
+               //Save choice in the session
+               localStorage.setItem('whitebrandvariablesfontchangesize', $("#text-resizing").val());
+               //Reset cells width (Avoid the error after the page load)
+                if(hot!=undefined){
+                    hot.updateSettings({
+                        colWidths: undefined
+                    });
+                }
+            });
+
+            //After load of the page we load the last font size choosed
+            if(localStorage.getItem("whitebrandvariablesfontchangesize") != null){
+                $('#text-resizing option[value="'+localStorage.getItem("whitebrandvariablesfontchangesize")+'"]').attr('selected', 'selected');
+                $("#text-resizing").change();
+            }
+            $( "#left-square").click(function() {
+                $("#right-square").show('slow');
+                $("#right-square").css('float','left');
+                $("#left-square").hide('slow');
+                $(".page-sidebar-menu").hide();
+                $(".page-content").css('margin-left','1px');
+                hot.updateSettings({
+                    width: "100%",
+                    colWidths: undefined
+                });
+            });
+            $( "#right-square").click(function() {
+                $("#left-square").show('slow');
+
+                $("#right-square").hide('slow');
+                $(".page-sidebar-menu").show('slow');
+                $(".page-content").css('margin-left','235px');
+                hot.updateSettings({
+                    width: "100%",
+                    colWidths: undefined
+                });
+            });
+            $("#left-square").show();
+        });
+    </script>
+{% endblock %}

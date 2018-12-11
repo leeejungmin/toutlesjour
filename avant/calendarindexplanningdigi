@@ -1,0 +1,268 @@
+{% extends "::app-layout.html.twig" %}
+
+{#{'label': 'Serial', 'width': '10%', 'filter_type': 'text', 'filter_name': 'serial'},#}
+{% set columns = [
+    {'label': 'Employee', 'width': '30%', 'filter_type': 'text', 'filter_name': 'name'}
+] %}
+{% set startDay = start|date('U') %}
+{% set endDay = end|date('U') %}
+{% for day in range(startDay, endDay, 86400) %}
+    {% set columns = columns|merge([{'label': day|intl_date('eeeeee dd'), 'width': '5%', 'filter_name': false, 'render_type': 'day', 'render_day' : day|date('Y-m-d')}]) %}
+{% endfor %}
+
+{% set tableSettings = {
+    'ajaxUrl' : path('app_company_calendar_datatable', {'company': company.id, 'start': start|date('Y-m-d'), 'type':'month'}),
+    'tableId' : 'calendar_data',
+    'filters' :[
+        {'label': 'Filtrer par Départment', 'filter_type': 'select', 'filter_name': 'department', 'choices':form.department.vars.choices },
+        {'label': 'Filtrer par Service', 'filter_type': 'select', 'filter_name': 'service', 'choices':form.service.vars.choices },
+        {'label': 'Filtrer par Unit', 'filter_type': 'select', 'filter_name': 'unit', 'choices':form.unit.vars.choices },
+        {'label': 'Filtrer par Planning', 'filter_type': 'select', 'filter_name': 'schedule_model', 'choices':form.schedule_model.vars.choices },
+    ],
+    'columns' : columns,
+    'hideAction' : true,
+    'hideHours' : true,
+}
+%}
+
+{% import 'AppBundle:Component:datatable.html.twig' as datatable %}
+{% block title %}
+
+    {{ 'Planning'|trans }}{% endblock %}
+
+{% block pageContent %}
+    <div id="show_hide_filter" >
+        <button id="show_hide_filter_button" type="button" class="btn btn-default btn-sm">{{ 'hide_filter_legende'|trans }}</button>
+    </div>
+    <div id="imports_result_show_result_btn_container">
+        <button id="imports_result_show_details" type="button" class="btn btn-danger pull-right">{{ "button.show.value.show.all.details"|trans }}</button>
+    </div>
+    {% if importResultsLog is defined and importResultsLog is not empty  %}
+        <div id="imports_result_container">
+            {% if importResultsLog.koLogs is defined and importResultsLog.koLogs is not empty %}
+                <div class="show_error">
+                    {% for law in importResultsLog.koLogs %}
+                        <div class="row_element">{{ law }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if importResultsLog.okLogs is defined and importResultsLog.okLogs is not empty %}
+                <div class="show_insert">
+                    {% for law in importResultsLog.okLogs %}
+                        <div class="row_element">{{ law }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% embed 'AppBundle:Component:portlet.html.twig' %}
+        {% block title %}{{ start|intl_date('MMMM y') }} {% endblock %}
+        {% block actions %}
+            <a class='btn' href="{{ path('app_company_calendar_index', { 'company': company.id, 'start': start|date_modify('-1 month')|date('Y-m-d') } )}}"><i class="fa fa-chevron-left"></i>
+                {{ 'action.previous_month'|trans }} </a>
+
+            <a class='btn btn-primary' href="{{ path('app_company_calendar_list', { 'company': company.id, 'start': start|date('Y-m-d') })}}"> {{ 'action.list_view'|trans }} </a>
+            {% if is_granted('DIGIPAYE_COMPANY_EDIT', company) %}
+                <a class='btn btn-primary' href="{{ path('app_company_calendar_events', { 'company': company.id})}}"> {{ 'action.company_events'|trans }} </a>
+            {% endif %}
+            <a class='btn' href="{{ path('app_company_calendar_index', { 'company': company.id, 'start': start|date_modify('+1 month')|date('Y-m-d') } )}}">
+                {{ 'action.next_month'|trans }} <i class="fa fa-chevron-right"></i></a>
+
+        {% endblock %}
+
+        {% block body %}
+            <div id="hide_show_layout">
+            Légende :
+            <div class="calendar-legend">
+                {% for data in eventsReferencesByCompanyLegend %}
+                    <div class="calendar_legend_container">
+                        <div class="default-event event-{{ data.code }}"></div>
+                        <div class="{{ data.code }}">{{ data.title }}</div>
+                    </div>
+                {% endfor %}
+                <div><div class="fa fa-building" ><div id="company-event-picto-container">Événement d'entreprise</div></div></div>
+            </div>
+            </div>
+            {%  if userCanImportEvents is defined and userCanImportEvents==true %}
+                <div class="form-actions">
+                    <button name="" id="" class="btn btn-primary pull-right" data-target="#EvenementAbsent" data-toggle="modal" >importer des absences</button><br>
+                    <div class="modal" id="EvenementAbsent" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button class="close" data-dismiss="modal">$times;</button>
+                                    <h4 class="modal-title">
+                                        <ul id="absences_import_navtabs" class="nav nav-tabs">
+                                            <li class="active"><a data-toggle="tab" href="#absences_import">Import d'absences</a></li>
+                                            <li><a data-toggle="tab" href="#absences_import_guide">Guide</a></li>
+                                        </ul>
+                                    </h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="tab-content">
+                                        <div id="absences_import" class="tab-pane fade in active">
+                                            {{ form_start(importEventAbsent)  }}
+                                            {{ form_errors(form) }}
+                                            <div class="form-group display-none">
+                                                {{ form_label(importEventAbsent.type) }}
+                                                {{ form_widget(importEventAbsent.type) }}
+                                            </div>
+                                            <div class="form-group">
+                                                {{ form_label(importEventAbsent.file) }}
+                                                {{ form_widget(importEventAbsent.file) }}
+                                            </div>
+                                            <div class="modal-footer">
+                                                {{ form_widget(importEventAbsent.Save)}}
+                                            </div>
+                                        </div>
+                                        {{ form_end(importEventAbsent) }}
+                                        <div id="absences_import_guide" class="tab-pane fade">
+
+                                            <div class="first-container">
+                                                <div class="first-container-left">
+                                                    <h4>Type de fichiers:</h4>
+                                                    <ul>
+                                                        <li>CSV</li>
+                                                        <li>XLS</li>
+                                                        <li>XLSX</li>
+                                                    </ul>
+                                                </div>
+                                                <div class="first-container-right">
+                                                    <h4>Champs (structure) du fichier :</h4>
+                                                    <ul>
+                                                        <li>Matricule</li>
+                                                        <li>Type d'absence</li>
+                                                        <li>Date début</li>
+                                                        <li>Début d'événement</li>
+                                                        <li>Date fin</li>
+                                                        <li>Fin d'événement</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <div class="second-container">
+                                                <h4>Contenu des champs :</h4>
+                                                <ul>
+                                                    <li class="blue-color">Matricule :</li>
+                                                    <ul class="btm-pddg-1p">
+                                                        <li>Matriucle du salarié existant (type text)</li>
+                                                    </ul>
+                                                    <li class="blue-color">Type d'absence :<span class="red-color"> (Le type doit strictement être égal à une de ces valeurs)</span></li>
+                                                    <ul class="btm-pddg-1p">
+                                                        {% for data in eventsReferencesByCompany %}
+                                                            <li>
+                                                                <div class="imports_guide_fwidth">{{ data.referenceEvent.id }}</div> => {{ data.title }}
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                    <li class="blue-color">Date début :</li>
+                                                    <ul class="btm-pddg-1p">
+                                                        <li>Doit être une date valide respectant le format suivant 'JJ/MM/AAAA' et inférieur ou égale à la date Fin</li>
+                                                    </ul>
+                                                    <li class="blue-color">Début de l'événement :</li>
+                                                    <ul class="btm-pddg-1p">
+                                                        <li>midi</li>
+                                                        <li>matin</li>
+                                                    </ul>
+                                                    <li class="blue-color">Date fin :</li>
+                                                    <ul class="btm-pddg-1p">
+                                                        <li>Doit être une date valide respectant le format suivant 'JJ/MM/AAAA' et supérieur ou égale à la date début</li>
+                                                    </ul>
+                                                    <li class="blue-color">Fin de l'événement:</li>
+                                                    <ul>
+                                                        <li>midi</li>
+                                                        <li>matin</li>
+                                                    </ul>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {{ datatable.renderHtml(tableSettings) }}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}
+    {% block pagescript %}
+        {{ datatable.renderJs(tableSettings) }}
+        {{ parent() }}
+        <script>
+            $(document).ready(function() {
+                if(localStorage.getItem('planningShowHideFiltersFlag')!= undefined){
+                    if(localStorage.getItem('planningShowHideFiltersFlag') =="yes"){
+                        $('.table-container .table-filter-wrapper ,#hide_show_layout ').hide(800);
+                        $('#show_hide_filter_button').html('Afficher les filtres et la légende');
+                    }
+                }
+
+                //Show and hide Filters
+                $('#show_hide_filter_button').click(function(){
+                    if($('.table-filter-wrapper').is(":visible") === true){
+                        localStorage.setItem('planningShowHideFiltersFlag', 'yes');
+                        $('#show_hide_filter_button').html('Afficher les filtres et la légende');
+                    }else{
+                        localStorage.setItem('planningShowHideFiltersFlag', '');
+                        $('#show_hide_filter_button').html('Cacher les filtres et la légende');
+                    }
+                    $('.table-container .table-filter-wrapper ,#hide_show_layout').toggle(800);
+                });
+
+               //workin on duplicated Event label
+                if($('.0222').length==1 && $('.0333').length==1){
+                    var element0333 = $(".0333").text();
+                    $( ".default-event.event-0333" ).remove();
+                    $('.0222').append(" / " + element0333);
+                    $( ".0333" ).parent().remove();
+                }
+                {% if importResultsLog is defined and importResultsLog is not empty  %}
+                $("#imports_result_show_result_btn_container").show("slow");
+                {% endif %}
+
+                $("#imports_result_show_details").click(function() {
+                    if($("#imports_result_container").css('display')=="none"){
+                        $("#imports_result_container").show("slow");
+                        $("#imports_result_show_details").text('{{ "button.show.value.hide.all.details"|trans }}');
+                    }else{
+                        $("#imports_result_container").hide("slow");
+                        $("#imports_result_show_details").text('{{ "button.show.value.show.all.details"|trans }}');
+                    }
+                });
+
+                var table = $('#calendar_data').DataTable();
+                table.on( 'user-select', function ( e, dt, type, cell, originalEvent ) {
+                    var $span = $(originalEvent.target);
+                    var eventType = $span.data('event-type');
+                    var eventId = $span.data('event-id');
+                    if(eventId) {
+                        var url;
+                        var data = cell.data();
+                        var eventData = data[eventType][eventId];
+                        if(eventType == 'employee-event') {
+                            url = "{{ path('app_company_calendar_modalemployeeevent', {'company':company.id})}}/" + eventData['id'];
+                        }
+                        else {
+                            url = "{{ path('app_company_calendar_modalcompanyevent', {'company':company.id})}}/" + eventData['id'];
+                        }
+                        $('body').popinify({'targetUrl' : url});
+                    } else {
+                        var data = cell.data();
+                        if (typeof data == 'object' && 'day' in data && 'employee' in data) {
+                            url = "{{ path('app_company_calendar_modalemployeeeditevent', {'company':company.id})}}/"
+                                + data['employee'] + "/" + data['day'].format('YYYY-MM-DD');
+                            $('body').popinify({'targetUrl' : url});
+                        }
+                    }
+                    return e.preventDefault();
+                });
+                $('body').on('formSucess.dp.popinify', function() {
+                    table.ajax.reload();
+                });
+            });
+        </script>
+    {% endblock %}

@@ -1,0 +1,29 @@
+{{ form_row(form.job.collectiveAgreement )}}
+{{ form_row(form.job.department) }}
+{{ form_row(form.job.service) }}
+{{ form_row(form.job.unit) }}
+{{ form_row(form.job.category) }}
+{{ form_row(form.job.jobHeld) }}
+{{ form_row(form.job.jobIndex) }}
+{{ form_row(form.job.qualification) }}
+{{ form_row(form.job.level) }}
+{{ form_row(form.job.minimumWage) }}
+{{ form_row(form.job.coefficient) }}
+{{ form_row(form.job.paymentMode, {'value' : setpaymentMode}) }}
+
+
+
+
+
+
+{{ form_row(form.job.paymentMode, {'value' : setpaymentMode|number_format}) }}
+
+
+{{ form_row(form.contract.establishment )}}
+            {{ form_row(form.contract.reasonForEntry, {'value' : setReasonForEntry})}}
+            {{ form_row(form.contract.type) }}
+            {{ form_row(form.contract.typeReason, {'value' : setTypeReason|number_format})}}
+            {{ form_row(form.contract.codeInsee) }}
+            {{ form_row(form.contract.startDate) }}
+            {{ form_row(form.contract.trialPeriodEndDate) }}
+            {{ form_row(form.contract.file) }}

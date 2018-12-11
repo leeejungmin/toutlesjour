@@ -1,0 +1,97 @@
+<?php
+
+namespace SageBundle\Form\Employee;
+
+use AppBundle\Security\UserAccessVoter;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+
+class TeamType extends AbstractType
+{
+    /**
+     * @param FormBuilderInterface $builder
+     * @param array $options
+     */
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $company = $options['company'];
+
+        //TODO: Add users that doesn't belong to company, but have access to it. aka super_drh super_admin
+        $builder
+            ->add('title',TextType::class,array(
+                'attr' => array('style' => 'padding: 30px;')
+            ))
+            ->add('externalManagers', null, array(
+                'attr' => array('style' => 'padding: 30px;'),
+                'choice_label' => function ($e) {
+                    return $e->getEmail();
+                },
+                'query_builder' => function (EntityRepository $er) use ($company) {
+                    return $er->getUsersByAccessOnCompany(UserAccessVoter::ACCESS_MANAGER, $company, false, true);
+                },
+                'label' => 'Manager externe'
+            ))
+            ->add('managers', null, array(
+                'attr' => array('style' => 'padding: 30px;'),
+                'choice_label' => function ($e) {
+                    return $e->getSerial() . ' - ' . $e->getPeople()->getFirstName() . ' ' . $e->getPeople()->getLastName();
+                },
+                'query_builder' => function (EntityRepository $er) use ($company) {
+                    return $er->createQueryBuilder('e')
+                        ->select('e, p, ua')
+                        ->where('e.company = :company')
+                        ->join('e.people', 'p')
+                        ->leftjoin('e.userAccess', 'ua')
+                        ->setParameter('company', $company);
+                        //->where('u.roles LIKE :role')
+                        //->setParameter('role', '%MANAGER%')
+                        //->andWhere('u.enabled = 1');
+                }
+            ))
+            ->add('employees', null, array(
+                'attr' => array('style' => 'padding: 30px;'),
+                //'choice_label' => 'serial',
+                'choice_label' => function ($e) {
+                    return $e->getSerial() . ' - ' . $e->getPeople()->getFirstName() . ' ' . $e->getPeople()->getLastName();
+                },
+                'query_builder' => function (EntityRepository $er) use ($company) {
+                    return $er->createQueryBuilder('e')
+                        ->select('e, p, ua')
+                        ->where('e.company = :company')
+                        ->join('e.people', 'p')
+                        ->leftjoin('e.userAccess', 'ua')
+                        ->setParameter('company', $company);
+                },
+            ))
+
+            ->add('breakTime', ChoiceType::class, array(
+                'attr' => array('style' => 'padding: 30px;'),
+                'label' => 'Durée pause déjeuner',
+                'choices' => array(
+                    '' => null,
+                    '0m' => "0.00",
+                    '30m' => "0.50",
+                    '1h' => "1",
+                    '1,30h' => "1.50",
+                    '2h' => "2"
+                ),
+                /*'data' => $default,
+                'mapped' => false*/
+            ));
+    }
+
+    /**
+     * @param OptionsResolver $resolver
+     */
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults(array(
+            'data_class' => 'SageBundle\Entity\Employee\Team',
+            'company' => null
+        ));
+    }
+}

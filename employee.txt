@@ -1,0 +1,15 @@
+/**
+     * @var \SageBundle\Entity\Employee\Event
+     */
+    private $event;
+
+
+    /**
+     * Get events
+     *
+     * @return \SageBundle\Entity\Employee\Event $event
+     */
+    public function getEvent()
+    {
+        return $this->events;
+    }

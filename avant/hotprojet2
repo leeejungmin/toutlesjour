@@ -1,0 +1,25 @@
+if($( "#myselect" ).val()===0){
+                   $('#hot').css("font-size", function() {
+                       return parseInt($(this).css('font-size')) + 150 + "%";
+                   });
+               }
+elsif($( "#myselect" ).val()===1){
+                   $('#hot').css("font-size", function() {
+                       return parseInt($(this).css('font-size')) + 120 + "%";
+                   });
+               }
+elsif($( "#myselect" ).val()===2){
+                   $('#hot').css("font-size", function() {
+                       return parseInt($(this).css('font-size')) + 100 + "%";
+                   });
+               }
+elsif($( "#myselect" ).val()===3){
+                   $('#hot').css("font-size", function() {
+                       return parseInt($(this).css('font-size')) + 80 + "%";
+                   });
+               }
+elsif($( "#myselect" ).val()===4){
+                   $('#hot').css("font-size", function() {
+                       return parseInt($(this).css('font-size')) + 60 + "%";
+                   });
+               }

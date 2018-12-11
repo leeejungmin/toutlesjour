@@ -1,0 +1,92 @@
+
+SELECT 
+       name,
+       SUM(A) DEPOT,
+       SUM(B) WITHDRAW
+FROM 
+(
+       SELECT (CASE WHEN money>0 THEN A
+     ELSE B END);
+FROM customer;
+) t
+GROUP BY name
+
+
+
+SELECT 
+       name,
+       SUM(A) DEPOT,
+       SUM(B) WITHDRAW
+FROM 
+(
+       SELECT (CASE WHEN money>0 THEN A
+     	ELSE B END)
+		FROM customer;
+);
+
+
+
+
+
+
+SELECT 
+       SUM('A') AS DEPOT,
+       SUM('B') AS WITHDRAW
+FROM 
+(
+       SELECT (CASE WHEN money>0 THEN 'A'
+     	ELSE 'B' END)
+		FROM customer) AS T;
+
+
+
+
+SELECT 
+	name
+	T,
+	money,
+       SUM('A') AS DEPOT,
+       SUM('B') AS WITHDRAW
+FROM 
+(
+       SELECT name,money, (CASE WHEN money>0 THEN 'A'
+     	ELSE 'B' END) AS T
+		FROM customer) AS G;
+
+
+
+     
+
+
+     
+
+
+SELECT name,money, (CASE WHEN money>0 THEN 'A'
+     	ELSE 'B' END) AS T
+		FROM customer
+    	;
+
+SELECT name,SUM(money), (CASE WHEN money>0 THEN 'A'
+     	ELSE 'B' END) AS T
+		FROM customer
+    	;
+
+////////// c'est presque fini/////////////////////////////////////
+
+SELECT name,SUM(money) as 'SUM MONEY', (CASE WHEN money>0 THEN 'deposit'
+     	ELSE 'withdraw' END) AS 'Type'
+		FROM customer
+    	GROUP BY Type,name
+	ORDER BY name DESC;
+
+///////////// craquer!!!!!!!!!!///////////////////////////////////////
+
+
+
+
+
+SELECT name,SUM(CASE WHEN money>0 THEN moneyelse 0 end) 'deposit',
+	    SUM(CASE WHEN money<0 THEN moneyelse 0 end) 'withdraw'
+	FROM customer
+    	GROUP BY name
+	ORDER BY name DESC;

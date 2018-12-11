@@ -1,0 +1,38 @@
+
+
+                    <label class="skills">Autonomie
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Organisation
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Adaptation
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Initiative
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Communication
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Rigueur
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Travail en équipe
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Disponibilité
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>
+                   <label class="skills">Motivation
+                       <input name="skills" type="checkbox">
+                       <span class="checkmark"></span>
+                   </label>

@@ -1,0 +1,42 @@
+$contract = new Contract();
+
+       $entityManager = $this->getDoctrine()->getManager();
+       $repo = $entityManager->getRepository('Louis21Bundle:Contract');
+
+       $jobTitle = $_POST['jobTitle'];
+       $startDate = $_POST['startDate'];
+       $endDate= $_POST['endDate'];
+       $company = $_POST['company'];
+       $businessUnit = $_POST['businessUnit'];
+       $taskName = $_POST['taskName'];
+       $taskDescription = $_POST['taskDescription'];
+       $skills = $_POST['skills'];
+
+
+
+       $contract
+           ->setJobTitle($jobTitle)
+           ->contractType('manager')
+           ->startDate($startDate)
+           ->endDate($endDate)
+           ->company($company)
+           ->businessUnit(businessUnit)
+           ->taskName($taskName)
+           ->taskDescription($taskDescription)
+           ->skills($skills)
+           ->setCreatedAt(new DateTime());
+
+       //get token
+       $this->get('louis21.essential.token')->getToken();
+
+       // create Employee
+       $this->get('louis21.essential.token')->contractCreation($contract);
+
+       $this->addFlash(
+           'success',
+           'Employee created'
+       );
+
+       return $this->render('AppBundle:Louis21:addSecondStep.html.twig', array(
+           'company' => $company
+       ));

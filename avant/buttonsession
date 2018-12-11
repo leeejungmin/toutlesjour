@@ -1,0 +1,15 @@
+// show and hide event
+              $('#show_hide_filter_button').click(function(){
+                  console.log('jungin here very Good');
+                  if($('.table-filter-wrapper').is(":visible") === true){
+                      localStorage.setItem('filter_hide_variableswhitebrand', 'yes');
+                  }else{
+                      localStorage.setItem('filter_hide_variableswhitebrand', 'no');
+                  };
+                  $('.table-filter-wrapper ,#hide_show_layout').toggle(1000);
+              });
+              if(localStorage.getItem('filter_hide_variableswhitebrand') == 'yes'){
+                  $('.table-filter-wrapper ,#hide_show_layout').hide();
+              }else{
+                  $('.table-filter-wrapper ,#hide_show_layout').show();
+              }

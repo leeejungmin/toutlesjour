@@ -1,0 +1,80 @@
+<!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">{{ 'action.create.Manager'|trans }}</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                   </button>
+                 </div>
+
+
+                 {#add creer manager#}
+                 <div id="popup_team_manager_create_form" class="modal-body">
+                    <form id="create_manager_form"  method="POST" class="form-horizontal">
+                       <div id="company_user_access">
+
+
+                          <div class=" form-group ">
+                             <label class="col-sm-2" for="company_user_access_email">Email</label>
+                             <div class="col-sm-10">
+                                <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                                 <input type="email" id="form_email" name="company_user_access[email]" required="required" class="form-control" />
+                               </div>
+                             </div>
+                           </div>
+
+
+                          <div class=" form-group ">
+                            <label class="col-sm-2" for="company_user_access_lastName"> Nom </label>
+                            <div class="col-sm-10">
+                              <input type="text" id="form_lastname" name="company_user_access[lastName]" required="required" class="form-control" />
+                                </div>
+                              </div>
+
+
+                              <div class=" form-group ">
+                                <label class="col-sm-2" for="company_user_access_firstName"> Prénom </label>
+                                <div class="col-sm-10">
+                                  <input type="text" id="form_firstname" name="company_user_access[firstName]" required="required" class="form-control" />
+                                </div>
+                              </div>
+
+
+                              <div class="form-group">
+
+                                <div class="col-sm-2">
+                                </div>
+
+                              <div class="col-sm-10">
+                              <div class="mt-checkbox-list">
+                                <label class="mt-checkbox ">
+                                  <input type="checkbox" id="company_user_access_enabled" name="company_user_access[enabled]" value="1" required="required" checked="checked" /> Activé
+                                  <span></span>
+                                </label>
+                              </div>
+                             </div>
+                            </div>
+
+                            <input type="hidden" id="company_user_access__token" name="company_user_access[_token]" value="zyC5VIXkmDjA4crTGKeLS3RE5-oZL4NzoKN9YkkJDmg" />
+                          </div>
+
+
+                           <div id="modal-errors">
+                           </div>
+
+                           <div class="modal-footer">
+                              <button class="btn btn-danger" data-dismiss="modal" aria-label="Close">{{ 'action.cancel'|trans }}
+                              </button>
+                              <button type="submit" id="managercreate" class="btn btn-primary" >{{ 'action.create.Manager'|trans }}</button>
+                            </div>
+
+
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                 </div>

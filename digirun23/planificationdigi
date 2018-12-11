@@ -1,0 +1,656 @@
+{% extends "::app-layout.html.twig" %}
+
+{% import 'AppBundle:Component:datatable.html.twig' as datatable %}
+
+{% block head %}
+    {{ parent() }}
+    {% block title %}{{ 'Planification'|trans }}{% endblock %}
+    {% block stylesheets %}
+        {{ parent() }}
+        <link href={{ asset('media/fullcalendar/fullcalendar.min.css') }} rel='stylesheet' />
+        <link href={{ asset('media/fullcalendar/fullcalendar.print.min.css') }} rel='stylesheet' media='print' />
+        <link href={{ asset('media/fullcalendar/style.css') }} rel='stylesheet'  />
+    {% endblock %}
+
+    {% block javascripts %}
+    {{ parent() }}
+        <script src={{ asset('media/fullcalendar/lib/jquery-ui.min.js') }}></script>
+        <script src={{ asset('media/fullcalendar/fullcalendar.min.js') }}></script>
+        <script src={{ asset('media/fullcalendar/locale/fr.js') }}></script>
+        <script src="{{ asset('media/fullcalendar/js/gcal.min.js') }}" type="text/javascript"></script>
+        <script src="{{ asset('media/fullcalendar/js/scheduler.min.js') }}" type="text/javascript"></script>
+    {% endblock  %}
+
+
+{% endblock %}
+
+
+
+
+
+{% block pageContent %}
+<div id="show_hide_filter" >
+<button id="show_hide_filter_button" type="button" class="btn btn-default btn-sm">{{ 'hide_filter_legende'|trans }}</button>
+</div>
+<div style="text-align: center;">
+
+    {% block actions %}
+        <a class='btn' id="previous-month" href="{{ path('app_company_planning_index', { 'company': company.id, 'start': start|date_modify('-1 month')|date('Y-m-d') } )}}"><i class="fa fa-chevron-left"></i>
+            {{ 'action.previous_month'|trans }} </a>
+        {{ 'Planification'|trans }} - {{ start|intl_date('MMMM y') }}
+
+        <a class='btn' id="next-month" href="{{ path('app_company_planning_index', { 'company': company.id, 'start': start|date_modify('+1 month')|date('Y-m-d') } )}}">
+            {{ 'action.next_month'|trans }} <i class="fa fa-chevron-right"></i></a>
+
+    {% endblock %}
+</div>
+
+<div style="overflow: hidden">
+    <div id="hide_show_layout_one">
+    <h4>Filtrer le tableau</h4>
+
+    <div id="variables_excel_selects" class="form-group ">
+
+        <div class="table-filter-wrapper">
+            <select class="form-control" id="select_equipe" data-live-search="true" onchange="change_select_equipe()">
+                <option value="0" data-tokens="">Filtrer par Equipe</option>
+                {% for valueTeam  in  teams %}
+                    <option value="{{ valueTeam.id }}" data-tokens="{{ valueTeam.title }}">{{ valueTeam.title }}</option>
+                {% endfor %}
+            </select><br>
+        </div>
+
+        <br><br>
+    </div>
+    </div>
+    <div id='wrap'>
+        <div>
+        <div id="hide_show_layout_second">
+            <div id="planification-calendar-legends">
+                Légende :
+                <div class="calendar-legend">
+                    {% for data in eventsReferencesByCompanyLegend %}
+                        <div class="calendar_legend_container">
+                            <div class="default-event event-{{ data.code }}"></div>
+                            <div class="{{ data.code }}">{{ data.title }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+            <div id="employee-weekly-hours-container">
+            </div>
+            <div id="planification-container">
+                <div id="external-events">
+                    <h4>Employés</h4>
+                    <div id="result_filter_team">
+                        {% for valueEmp  in  employees %}
+                            <div class='fc-event'><span style="display: none;">{{ valueEmp.id }} - </span> {{ valueEmp.name }} </div>
+                        {% endfor %}
+                    </div>
+                    <br /><br />
+                    <!-- <p>
+                        <input type='checkbox' id='drop-remove' />
+                        <label for='drop-remove'>remove after drop</label>
+                    </p>-->
+                </div>
+                <div id="planification-errors"></div>
+                <div id='planification-calendar'></div>
+            </div>
+        </div>
+
+        <div style="clear: both;">
+            <br />
+            {% if isExistingClosure is defined and isExistingClosure is null %}
+                {% if showValidateButton is defined and showValidateButton==true %}
+                    <a class="btn btn-primary pull-right" href="javascript:void(0)" style="margin-left: 10px;" onclick="validateData()">Valider</a>
+                    &nbsp;&nbsp;
+                {% endif %}
+            {% endif %}
+            <a class="btn btn-primary pull-right" href="javascript:void(0)" onclick="saveData()" {% if isExistingClosure is defined and isExistingClosure==true %} disabled="true" {% endif %}>Sauvegarder</a>
+        </div>
+        <br /><br />
+        <div id="result_tab_of_weeks"></div>
+
+        <br />
+    </div>
+
+
+    {% endblock %}
+
+    {% block pagescript %}
+            <script>
+              $(document).ready(function() {
+                  if(localStorage.getItem('planningShowHideFiltersFlag')!= undefined){
+                 if(localStorage.getItem('planningShowHideFiltersFlag') =="yes"){
+                     $('.table-container .table-filter-wrapper ,#hide_show_layout_one, #hide_show_layout_second').hide(800);
+                     $('#show_hide_filter_button').html('Afficher les filtres et la légende');
+                 }
+             }
+
+             //Show and hide Filters
+             $('#show_hide_filter_button').click(function(){
+                 if($('.table-filter-wrapper').is(":visible") === true){
+                     localStorage.setItem('planningShowHideFiltersFlag', 'yes');
+                      $('#show_hide_filter_button').html('Afficher les filtres et la légende');
+                 }else{
+                     localStorage.setItem('planningShowHideFiltersFlag', '');
+                      $('#show_hide_filter_button').html('Cacher les filtres et la légende');
+                 }
+                 $('.table-container .table-filter-wrapper ,#hide_show_layout_one, #hide_show_layout_second').toggle(800);
+             });
+                /* initialize the calendar
+                -----------------------------------------------------------------*/
+                $('#planification-calendar').fullCalendar({
+                    schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
+                    {% if isExistingClosure is defined and isExistingClosure is not null %}
+                        editable: false,
+                        eventResourceEditable: false,
+                        eventDurationEditable: false,
+                        disableDragging: true,
+                        selectable: false,
+                        eventStartEditable: false,
+                    {% else %}
+                        editable: true,
+                        droppable: true, // this allows things to be dropped onto the calendar
+                    {% endif %}
+                    header: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        //For the vertical view
+                        right: 'agendaWeek,agendaDay'
+                    },
+                    //Days clickable
+                    defaultView: 'agendaWeek',
+                    slotDuration: '00:30:00',
+                    minTime: '07:00:00',
+                    maxTime: '23:00:00',
+                    navLinks: true,
+                    nowIndicator: true,
+                    eventLimit: true,
+                    /*businessHours: [{
+                        dow: [1, 2, 3, 4, 5],
+                        start: '06:00:00',
+                        end: '23:00:00'
+                    }],*/
+
+                    {% set endClone = end %}
+                    validRange: {
+                        start: '{{ start|date('Y-m-d') }}',
+                        end: '{{ endClone|date_modify("+1 day")|date('Y-m-d') }}'
+                    },
+                    eventClick: function(data, event, view) {
+
+                    },
+                    /*
+                    eventMouseover: function (event, jsEvent, view) {
+                         //$(this).tooltip({title: event.title});
+                        // $.fullCalendar.formatDate(event.end, 'h:mmt')
+                         //var layer =	"<div id='events-layer' class='fc-transparent' style='position:absolute;border: 1px solid red; z-index:100'>"+event.title+"</div>";
+	                    // $(this).append(layer);
+
+                    },
+                    */
+                    eventMouseover: function(calEvent, jsEvent) {
+                        var tooltip = '<div class="tooltipevent" style="border-radius: 7px !important;width:100px;height:100px;background:#ccc;position:absolute;z-index:10001;padding:10px">' + calEvent.title + '</div>';
+                        $("body").append(tooltip);
+                        $(this).mouseover(function(e) {
+                            $(this).css('z-index', 10000);
+                            $('.tooltipevent').fadeIn('500');
+                            $('.tooltipevent').fadeTo('10', 1.9);
+                        }).mousemove(function(e) {
+                            $('.tooltipevent').css('top', e.pageY + 10);
+                            $('.tooltipevent').css('left', e.pageX + 20);
+                        });
+                    },
+                    eventMouseout: function(calEvent, jsEvent) {
+                         $(this).css('z-index', 8);
+                         $('.tooltipevent').remove();
+                    },
+                    eventDrop: function( event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view ) {
+                        var years = event.start._i[0];
+                        var month = event.start._i[1]+1;
+                        var days  = event.start._i[2];
+
+                        if(days.toString().length == 1) $dayss = "0"+days;
+                        else $dayss = days;
+
+                        if(month.toString().length == 1) $months = "0"+month;
+                        else $months = month;
+
+                        var date    = $dayss+"-"+$months+"-"+years;
+                        var idTeam  = $("#select_equipe").val();
+                        var result = event.title.split('-');
+                        var idThis = result[0].replace(' ','');
+
+                        var json = $("#planification-calendar").fullCalendar("clientEvents").map(function(e) {
+                            var result = e.title.split('-');
+                            var idR = result[0].replace(' ','');
+                            return {
+                                date    : moment(e.start).format("DD-MM-YYYY"),
+                                dateInvers    : moment(e.start).format("YYYY-MM-DD"),
+                                startHours    : moment(e.start).format("HH"),
+                                endHours    : moment(e.end).format("HH"),
+                                IDOrig  : e.id,
+                                idEmployee      : e.employeeid,
+                                id      : idR,
+                                idTeam  : idTeam,
+                                type    : e.type
+                            };
+                        });
+
+                        var j = 0;
+                        $.each(json, function(i, item) {
+                            var dateCal     = json[i].date;
+                            var id          = json[i].id;
+                            var type        = json[i].type;
+                            var dateInvers        = json[i].dateInvers;
+                            if(id == idThis && dateCal == date ){
+                                if(type == "event"){
+                                    var startHours      = json[i].startHours;
+                                    var endHours        = json[i].endHours;
+                                    var diffHours = endHours - startHours;
+                                        if(diffHours > 8 ){
+                                            $('html, body').animate({ scrollTop: $("#variables_excel_selects").offset().top}, 300);
+                                            $("#planification-errors").html('<div class="alert alert-danger" role="alert">Cet employé ne travaille pas dans cette journée !</div>');
+                                            $("#planification-errors").show('slow').delay(3000).fadeOut();
+                                            $('#planification-calendar').fullCalendar('removeEvents', event._id);
+                                        }else{
+                                              event.start = dateInvers+"T"+endHours+":00:00";
+                                              $('#planification-calendar').fullCalendar('updateEvent', event);
+                                        }
+                                }else{
+                                    j++;
+                                }
+                            }
+                            if(j > 1){
+                                $('#planification-calendar').fullCalendar('removeEvents', event._id);
+                                $('html, body').animate({ scrollTop: $("#variables_excel_selects").offset().top}, 300);
+                                $("#planification-errors").html('<div class="alert alert-danger" role="alert">Vous avez déjà selectionné cet employé !</div>');
+                                $("#planification-errors").show('slow').delay(3000).fadeOut();
+                            }
+                        });
+                     },
+                    eventReceive: function(event, view,date) {
+                        var years = event.start._i[0];
+                        var month = event.start._i[1]+1;
+                        var days  = event.start._i[2];
+
+                        if(days.toString().length == 1) $dayss = "0"+days;
+                        else $dayss = days;
+
+                        if(month.toString().length == 1) $months = "0"+month;
+                        else $months = month;
+
+                        var date    = $dayss+"-"+$months+"-"+years;
+                        var idTeam  = $("#select_equipe").val();
+                        var result = event.title.split('-');
+                        var idThis = result[0].replace(' ','');
+
+                        var json = $("#planification-calendar").fullCalendar("clientEvents").map(function(e) {
+                            var result = e.title.split('-');
+                            var idR = result[0].replace(' ','');
+                            return {
+                                date    : moment(e.start).format("DD-MM-YYYY"),
+                                dateInvers    : moment(e.start).format("YYYY-MM-DD"),
+                                startHours    : moment(e.start).format("HH"),
+                                endHours      : moment(e.end).format("HH"),
+                                IDOrig  : e.id,
+                                idEmployee      : e.employeeid,
+                                id      : idR,
+                                idTeam  : idTeam,
+                                type    : e.type
+                            };
+                        });
+
+                        var j = 0;
+                        $.each(json, function(i, item) {
+                            var dateCal     = json[i].date;
+                            var id          = json[i].id;
+                            var type        = json[i].type;
+                            var dateInvers  = json[i].dateInvers;
+                            //console.log(id +"=="+ idThis);
+                            if(id == idThis && dateCal == date ){
+                                if(type == "event-days-off"){
+                                    $('#planification-calendar').fullCalendar('removeEvents', event._id);
+                                }
+                                if(type == "event" ||  typeof type === "undefined" ){
+
+                                    var startHours      = json[i].startHours;
+                                    var endHours        = json[i].endHours;
+                                    var diffHours = endHours - startHours;
+                                        if(diffHours > 8 ){
+                                            $('html, body').animate({ scrollTop: $("#variables_excel_selects").offset().top}, 300);
+                                            $("#planification-errors").html('<div class="alert alert-danger" role="alert">Cet employé ne travaille pas dans cette journée !</div>');
+                                            $("#planification-errors").show('slow').delay(3000).fadeOut();
+                                            $('#planification-calendar').fullCalendar('removeEvents', event._id);
+                                        }else{
+                                                event.start = dateInvers+"T"+endHours+":00:00";
+                                                $('#planification-calendar').fullCalendar('updateEvent', event);
+                                        }
+                                }else{
+                                    j++;
+                                }
+                            }
+                            if(j > 1){
+                                $('#planification-calendar').fullCalendar('removeEvents', event._id);
+                                $('html, body').animate({ scrollTop: $("#variables_excel_selects").offset().top}, 300);
+                                $("#planification-errors").html('<div class="alert alert-danger" role="alert">Vous avez déjà selectionné cet employé !</div>');
+                                $("#planification-errors").show('slow').delay(3000).fadeOut();
+                            }
+                        });
+                    },
+                    eventRender: function(event, element) {
+                        {# Disable the delete when the period is closed #}
+                        {% if isExistingClosure is defined and isExistingClosure is null %}
+                            if(event.type != 'event'){
+                               element.append( "<span class='removebtn'>X</span>" );
+                               element.find('.fc-content .fc-time ').click(function(){
+                                    if(event.id){
+                                        if (confirm('Êtes-vous sûr de vouloir supprimer "' + event.title + '"?')){
+                                            var id = event.id;
+                                            var dataSend  = 'id='+id;
+                                            var path = "{{ path('app_company_planning_deleteemp', {'company': company.id } ) }}";
+
+                                            $.ajax({
+                                                url: path,
+                                                dataType: 'text',
+                                                type: 'GET',
+                                                data : dataSend,
+                                                success: function (res) {
+                                                    $('#planification-calendar').fullCalendar('removeEvents', event._id);
+                                                }
+                                            });
+                                        }
+                                    }else{
+                                        $('#planification-calendar').fullCalendar('removeEvents', event._id);
+                                    }
+                                });
+                            }
+                        {% endif %}
+                    }
+                });
+            });
+
+            //$('#select_equipe').change(function() {
+            function change_select_equipe(idTeam){
+                if(!idTeam){
+                    var equipeID = $("#select_equipe").val();
+                }else{
+                    $('#select_equipe option[value="'+idTeam+'"]').prop('selected', true);
+                    var equipeID = idTeam;
+                }
+
+                var dataSend  = 'equipeID='+equipeID;
+                var path = "{{ path('app_company_planning_loademp', {'company': company.id } ) }}";
+                var valuePrev = $("#previous-month").attr("href");
+                var valueNext = $("#next-month").attr("href");
+
+                var n = valuePrev.indexOf("idTeam");
+                if(n < 0){
+                    var hrefPrev = valuePrev+"?idTeam="+equipeID;
+                    var hrefNext = valueNext+"?idTeam="+equipeID;
+                }else{
+                    var hrefPrev = valuePrev.split('?')[0]+"?idTeam="+equipeID;
+                    var hrefNext = valueNext.split('?')[0]+"?idTeam="+equipeID;
+                }
+                $("#previous-month").attr('href', hrefPrev);
+                $("#next-month").attr('href', hrefNext);
+
+                $.ajax({
+                    url: path,
+                    dataType: 'html',
+                    type: 'GET',
+                    data : dataSend,
+                    success: function (res) {
+                        //Clear the previous data to load the new one !
+                        $('#planification-calendar').fullCalendar('removeEvents');
+                        //Populate the List
+                        $("#result_filter_team").html(res);
+                        dragLeftList();
+                        if(equipeID!=""){
+                            loadData(equipeID);
+                            loadDataEvent(equipeID);
+                            loadCompanyDataEvent();
+                            //Load Employee Day Off
+                            loadEmployeeDataDaysOff(equipeID);
+                            //Load the salary weekly Data
+                            loadEmployeeWeeklyData(equipeID);
+                        }
+                    }
+                });
+            }
+            //});
+
+            function saveData() {
+                $(function () {
+                    var idTeam = $("#select_equipe").val();
+                    if(idTeam != 0){
+                        var calendar = $('#planification-calendar').fullCalendar();
+                        var json = JSON.stringify($("#planification-calendar").fullCalendar("clientEvents").map(function(e) {
+                            var result = e.title.split('-');
+
+                            //Get only the user planification data
+                            //To avoid the employees event over-load (load and save twice..)
+                            // e.className=="" => the user has add a new event
+                            // e.className=="event-actual-user-planification" => The event was loaded from the Database => Update
+                            // Else it's an employee event ex: event-XXXX
+                            if(e.className=="event-actual-user-planification" || e.className==""){
+
+                                //When the end is null (when the user did not define the end date)
+                                //Just drop the employee on a day then he save !
+                                if(!e.end){
+                                    var startModifiedCopy = moment(e.start).add(2, 'hours')
+                                    end = moment(startModifiedCopy).format("HH:mm");
+                                }else{
+                                    var end = moment(e.end).format("HH:mm");
+                                }
+
+                                return {
+                                    date    : moment(e.start).format("DD-MM-YYYY"),
+                                    start   : moment(e.start).format("HH:mm") ,
+                                    end     : end ,
+                                    title   : e.title,
+                                    IDOrig  : e.id,
+                                    idEmployee      : e.employeeid,
+                                    //Id when the list is empty and we populate it from the Drag & Drop
+                                    id      : result[0],
+                                    idTeam : idTeam
+                                };
+                            }else{
+                                return false;
+                            }
+
+                        }));
+
+                        var path = "{{ path('app_company_planning_savedata', {'company': company.id } ) }}";
+                        $.ajax({
+                            url: path,
+                            type: 'POST',
+                            traditional: true,
+                            dataType: 'text/html',
+                            data : json,
+                            success: function (res) {
+                            },
+                            done: function(data){
+                            },
+                            complete: function(data) {
+                                if(data.statusText=="OK"){
+                                    var equipeID = $("#select_equipe").val();
+                                    var urlNew = window.location.pathname+"?idTeam="+equipeID;
+                                    document.location.href= urlNew;
+                                    //Reload the page
+                                    //todo: load the page with the Team
+                                    //location.reload();
+                                }
+                            }
+                        });
+                    }else{
+                        $('html, body').animate({ scrollTop: $(".page-title").offset().top}, 300);
+                        $("#planification-errors").html('<div class="alert alert-danger" role="alert">Merci de choisir une équipe !</div>');
+                        $("#planification-errors").show('slow').delay(3000).fadeOut();
+                    }
+                });
+            }
+
+            function loadData(teamId){
+                var url = "{{ path('app_company_planning_loaddata', {'company': company.id, 'team': 'teamId', 'start': start | date('Y-m-d') }) }}";
+                url = url.replace("teamId", teamId);
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (res) {
+                           //Clear the previous data to load the new one !
+                        $('#planification-calendar').fullCalendar('addEventSource', res );
+                    }
+                });
+            }
+
+            function loadDataEvent(teamId){
+                var url = "{{ path('app_company_planning_loaddataevent', {'company': company.id, 'team': 'teamId', 'start': start | date('Y-m-d') }) }}";
+                url = url.replace("teamId", teamId);
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (res) {
+                          //Clear the previous data to load the new one !
+                        $('#planification-calendar').fullCalendar('addEventSource', res );
+
+                    }
+                });
+            }
+
+            function loadEmployeeWeeklyData(teamId){
+                var path = "{{ path('app_company_planning_loadweeklyemployeedata', {'company': company.id, 'team': 'teamId', 'start': start | date('Y-m-d')} ) }}";
+                path = path.replace("teamId", teamId);
+                $.ajax({
+                    url: path,
+                    type: 'POST',
+                    traditional: true,
+                    dataType: 'html',
+                    //data : json,
+                    success: function (res) {
+                        $("#result_tab_of_weeks").html(res);
+                    },
+                    done: function(data){},
+                    complete: function(data) {
+                    }
+                });
+            }
+
+            function loadCompanyDataEvent(){
+                var url = "{{ path('app_company_planning_loadcompanydataevent', {'company': company.id, 'team': 'teamId', 'start': start | date('Y-m-d') }) }}";
+                //url = url.replace("teamId", teamId);
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (res) {
+                          //Clear the previous data to load the new one !
+                        $('#planification-calendar').fullCalendar('addEventSource', res );
+                    $('#planification').fullCalendar('refetchEvents');
+                    }
+                });
+            }
+
+            function loadEmployeeDataDaysOff(teamId){
+                var url = "{{ path('app_company_planning_loademployeedatadaysoff', {'company': company.id, 'team': 'teamId', 'start': start | date('Y-m-d') }) }}";
+                url = url.replace("teamId", teamId);
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (res) {
+                          //Clear the previous data to load the new one !
+                        $('#planification-calendar').fullCalendar('addEventSource', res );
+                    $('#planification').fullCalendar('refetchEvents');
+                    }
+                });
+            }
+
+            function validateData(){
+                var teamId = $("#select_equipe").val();
+                var url = "{{ path('app_company_planning_validatedata', {'company': company.id,'team': 'teamId', 'start': start | date('Y-m-d') } ) }}";
+                url = url.replace("teamId", teamId);
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    traditional: true,
+                    dataType: 'text/html',
+                    //data : json,
+                    success: function (res) {
+                    },
+                    done: function(data){
+                    },
+                    complete: function(data) {
+                        if(data.statusText=="OK"){
+                            var equipeID = $("#select_equipe").val();
+                            var urlNew = window.location.pathname+"?idTeam="+equipeID;
+                            document.location.href= urlNew;
+                            //Reload the page
+                            //todo: load the page with the Team
+                            //location.reload();
+                        }
+                    }
+                });
+            }
+
+            $( "#left-square").click(function() {
+                $("#right-square").show('slow');
+                $("#right-square").css('float','left');
+                $("#left-square").hide('slow');
+                $(".page-sidebar-menu").hide();
+                $(".page-content").css('margin-left','1px');
+            });
+
+            $( "#right-square").click(function() {
+                $("#left-square").show('slow');
+
+                $("#right-square").hide('slow');
+                $(".page-sidebar-menu").show('slow');
+                $(".page-content").css('margin-left','235px');
+            });
+
+            function dragLeftList(){
+                $('#external-events .fc-event').each(function() {
+                    $(this).data('event', {
+                        title: $.trim($(this).text()), // use the element's text as the event title
+                        stick: true // maintain when user navigates (see docs on the renderEvent method)
+                    });
+                    // make the event draggable using jQuery UI
+                    $(this).draggable({
+                        zIndex: 999,
+                        revert: true,      // will cause the event to go back to its
+                        revertDuration: 0  //  original position after the drag
+                    });
+                });
+            }
+
+            jQuery(document).ready(function() {
+                Digipay.init();
+
+                $("#left-square").show();
+                dragLeftList();
+            });
+
+            var getUrlParameter = function getUrlParameter(sParam) {
+                var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                    sURLVariables = sPageURL.split('?'),
+                    sParameterName,
+                    i;
+
+                for (i = 0; i < sURLVariables.length; i++) {
+                    sParameterName = sURLVariables[i].split('=');
+
+                    if (sParameterName[0] === sParam) {
+                        return sParameterName[1] === undefined ? true : sParameterName[1];
+                    }
+                }
+            };
+            var getIdT = getUrlParameter('idTeam');
+            if(String(getIdT) != 'undefined' && String(getIdT) != '' ){
+                change_select_equipe(getIdT);
+            }
+
+        </script>
+
+    {% endblock %}

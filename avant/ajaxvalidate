@@ -1,0 +1,48 @@
+//ajax function
+        function validateData(){
+            var data;
+
+            //data = new FormData();
+
+            {#var url = "{{ path('app_company_planning_validatedata', {'company': company.id,'team': 'teamId', 'start': start | date('Y-m-d') } ) }}";
+            #}
+            var url = "{{ path('app_company_employee_manager_index', {'company': company.id } ) }}";
+
+            //var url= url.replace("teamId", teamId);
+            //down to the form
+            console.log("success go down to the page!");
+            localStorage.setItem('myCat', 'Tom');
+            data = $('form').serializeArray();
+            console.log(data);
+            $.ajax({
+                url: url,
+                type: 'POST',
+                traditional: true,
+                dataType: 'text/html',
+                data : data,
+                success: function (res) {
+                },
+                error:function(jqXHR, textStatus, errorThrown){
+                    alert("error \n" + textStatus + " : " + errorThrown);
+                    self.close();
+                },
+                done: function(data){
+                },
+                complete: function(data) {
+                    if(data.statusText=="OK"){
+                        console.log("complete!");
+                        //var equipeID = $("#select_equipe").val();
+                        //var urlNew = window.location.pathname+"?idTeam="+equipeID;
+                        //var urlNew = window.location.pathname+"?jungmin";
+                        var urlNew =  "{{ path('app_company_employee_manager_index', {'company': company.id } ) }}";
+                        //document.location.href= urlNew;
+                        $('html, body').animate({
+                            scrollTop: $("#scrolldown").offset().top
+                        }, 2000);
+                        //Reload the page
+                        //todo: load the page with the Team
+                        location.reload();
+                    }
+                }
+            });
+        }

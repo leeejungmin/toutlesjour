@@ -1,0 +1,108 @@
+{% extends "::app-layout.html.twig" %}
+{% block title %}Add Employee{% endblock %}
+{% block pageContent %}
+    <div class="form-group" style="display: flex;">
+        <form method="post" action=" {{ path('app_louis21_louis21_addsecond', { 'company': company.id }) }}">
+            <div class="basic-infos">
+                    <div class="form-group">
+                        <label for="jobTitle">QUEL POSTE DEVRA OCCUPER ERIC</label>
+                        <input type="text" id="jobTitle" name="jobTitle" placeholder="Intitulé du poste">
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">le</label>
+                        <input type="date" id="startDate" name="startDate" placeholder="Choix d'une date">
+                        <label for="endDate">à</label>
+                        <input type="date" id="endDate" name="endDate" placeholder="Choix d'une date">
+                    </div>
+                    <div class="form-group">
+                        <label for="company">ETABLISSEMENT</label>
+                        <input type="company" id="company" name="company" placeholder="Nom">
+                    </div>
+                    <div class="form-group">
+                        <label for="businessUnit">BUSINESS UNIT</label>
+                        <select>
+                            <option value="banque">banque</option>
+                            <option value="agriculture">agriculture</option>
+                            <option value="automobile">automobile</option>
+                            <option value="informatique">informatique</option>
+                        </select>
+                    </div>
+            </div>
+            <div class="mission-skill">
+                <div class="form-group" style="display: flex; flex-direction: column;">
+                    <label for="task">NOM DE LA MISSION</label>
+                    <input type="text" id="task" name="task" placeholder="Ecrire le nom de la mission">
+                    <input type="text" id="description" name="description" placeholder="Description">
+                    <input type="submit" id="taskButton" onclick="myFunction() name="taskeButton" value="Ajouter une mission">
+                </div>
+                <div class="form-group">
+                    <label for="skills">LISTE DES COMPÉTENCES REQUISES</label>
+                    <label class="skills">Autonomie
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Organisation
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Adaptation
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Initiative
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Communication
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Rigueur
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Travail en équipe
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Disponibilité
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="skills">Motivation
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <input type="submit" value="Terminer">
+            </div>
+        </form>
+    </div>
+
+
+    <script>
+    function myFunction() {
+      var element = document.getElementById("div1");
+      element.appendChild(para);
+
+
+    var para =  '  <div class="form-group" style="display: flex; flex-direction: column;">
+          <label for="task">NOM DE LA MISSION</label>
+          <input type="text" id="task" name="task" placeholder="Ecrire le nom de la mission">
+          <input type="text" id="description" name="description" placeholder="Description" >
+      </div>';
+    }
+    </script>
+
+
+
+
+
+
+
+    document.write('<p ><label for="task">NOM DE LA MISSION</label>\n' +
+               '    <input type="text" id="task" name="task" placeholder="Ecrire le nom de la mission">\n' +
+               '    <input type="text" id="description" name="description" placeholder="Description"></p>' +
+               '<input type="button" id="taskButton" onclick="myFunction()" name="taskeButton" value="Ajouter une mission">');
+           //var name= " <label for='task'>NOM DE LA MISSION</label>";
+           //document.getElementById('taskButton').innerHTML += name;

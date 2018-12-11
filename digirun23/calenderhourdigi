@@ -1,0 +1,99 @@
+{% extends "::app-layout.html.twig" %}
+
+{#{'label': 'Serial', 'width': '10%', 'filter_type': 'text', 'filter_name': 'serial'},#}
+{% set columns = [
+    {'label': 'Employee', 'width': '30%', 'filter_type': 'text', 'filter_name': 'name'},
+] %}
+{% set startDay = start|date('U') %}
+{% set endDay = end|date('U') %}
+{% for day in range(startDay, endDay, 86400) %}
+{% set columns = columns|merge([{'label': day|intl_date('eeeeee dd'), 'width': '5%', 'filter_name': false, 'render_type': 'day', 'render_day' : day|date('Y-m-d')}]) %}
+{% endfor %}
+{# Add actions #}
+
+{% set tableSettings = {
+    'ajaxUrl' : path('app_company_calendar_datatable', {'company': company.id, 'start': start|date('Y-m-d'), 'type': 'week' }),
+    'tableId' : 'calendar_data',
+    'filters' :[
+        {'label': 'Filtrer par Départment', 'filter_type': 'select', 'filter_name': 'department', 'choices':form.department.vars.choices },
+        {'label': 'Filtrer par Service', 'filter_type': 'select', 'filter_name': 'service', 'choices':form.service.vars.choices },
+        {'label': 'Filtrer par Unit', 'filter_type': 'select', 'filter_name': 'unit', 'choices':form.unit.vars.choices },
+        {'label': 'Filtrer par Planning', 'filter_type': 'select', 'filter_name': 'schedule_model', 'choices':form.schedule_model.vars.choices },
+    ],
+    'columns' : columns,
+    'hideAction' : false,
+}
+%}
+
+{% import 'AppBundle:Component:datatable.html.twig' as datatable %}
+
+{% block title %}{{ "Hours tracking"|trans }}{% endblock %}
+
+{% block pageContent %}
+    <div id="show_hide_filter" >
+        <button id="show_hide_filter_button" type="button" class="btn btn-default btn-sm">{{ 'hide_filter_legende'|trans }}</button>
+    </div>
+    {% embed 'AppBundle:Component:portlet.html.twig' %}
+    {% block title %}{{ start|intl_date('d MMM y') }} - {{ end|intl_date('d MMM y') }} | #{{ start|date('W') }}{% endblock %}
+    {% block actions %}
+        <a class='btn' href="{{ path('app_company_calendar_hours', { 'company': company.id, 'start': start|date_modify('last week')|date('Y-m-d') } )}}">
+            <i class="fa fa-chevron-left"></i> {{ 'action.previous_week'|trans }} </a>
+
+        <a class='btn' href="{{ path('app_company_calendar_hours', { 'company': company.id, 'start': start|date_modify('next week')|date('Y-m-d') } )}}">
+        {{ 'action.next_week'|trans }} <i class="fa fa-chevron-right"></i></a>
+    {% endblock %}
+    {% block body %}
+        <div id="hide_show_layout">
+        Légende :
+        <div class="calendar-legend" style="float:left; margin-bottom:2px;">
+            {% for data in eventsReferencesByCompanyLegend %}
+                <div class="calendar_legend_container">
+                    <div class="default-event event-{{ data.code }}"></div>
+                    <div class="{{ data.code }}">{{ data.title }}</div>
+                </div>
+            {% endfor %}
+            <div><div class="fa fa-building" ><div id="company-event-picto-container">Événement d'entreprise</div></div></div>
+        </div>
+        </div>
+        <!-- <a class='btn btn-primary pull-right' href="{# path('app_company_calendar_export', {'company': company.id, 'start': start|date_modify('next week')|date('Y-m-d')}) #}" target="_blank">{{ 'action.btn.export.csv'|trans }}</a> -->
+        {{ datatable.renderHtml(tableSettings) }}
+
+    {% endblock %}
+{% endembed %}
+
+{% endblock %}
+
+{% block pagescript %}
+    {{ datatable.renderJs(tableSettings) }}
+    {{ parent() }}
+    <script>
+        $(document).ready(function() {
+            if(localStorage.getItem('planningShowHideFiltersFlag')!= undefined){
+                if(localStorage.getItem('planningShowHideFiltersFlag') =="yes"){
+                    $('.table-container .table-filter-wrapper ,#hide_show_layout').hide(800);
+                    $('#show_hide_filter_button').html('{{ 'show_filter_legende'|trans }}');
+                }
+            }
+
+            //Show and hide Filters
+            $('#show_hide_filter_button').click(function(){
+                if($('.table-filter-wrapper').is(":visible") === true){
+                    localStorage.setItem('planningShowHideFiltersFlag', 'yes');
+                    $('#show_hide_filter_button').html('{{ 'show_filter_legende'|trans }}');
+                }else{
+                    localStorage.setItem('planningShowHideFiltersFlag', '');
+                    $('#show_hide_filter_button').html('{{ 'hide_filter_legende'|trans }}');
+                }
+                $('.table-container .table-filter-wrapper ,#hide_show_layout').toggle(800);
+            });
+
+            //workin on duplicated Event label
+            if($('.0222').length==1 && $('.0333').length==1){
+                var element0333 = $(".0333").text();
+                $( ".default-event.event-0333" ).remove();
+                $('.0222').append(" / " + element0333);
+                $( ".0333" ).parent().remove();
+            }
+        });
+    </script>
+{% endblock %}

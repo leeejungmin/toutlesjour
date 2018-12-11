@@ -1,0 +1,70 @@
+
+            $("#form_email").bind("focusout", emailvalidate);
+            $("#form_lastname").bind("focusout", lastnamevalidate);
+            $("#form_firstname").bind("focusout", firstnamevalidate);
+
+
+                //validate condition
+                var valFirstname = $("#form_firstname").val();
+                var valLastname = $("#form_lastname").val();
+                var valEmail = $("#form_email").val();
+                console.log('validatename is'+valLastname);
+
+                if (valLastname.length < 3) {
+                    alert("Votre nom devrait être au moins trois lettres. ");
+                    return false;
+                }
+                if (valFirstname.length < 3) {
+                    alert("Votre prénom devrait être au moins trois lettres. ");
+                    return false;
+                }
+                if (!validateEmail(valEmail)) {
+                    alert("Votre email n'a pas été vérifié.");
+
+                    return false;
+                }
+
+		var formValidationErrors = "";
+                //email validation
+                function validateEmail(email) {
+                    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                    return re.test(email);
+                }
+
+                function emailvalidate() {
+                    var $result = $("#modal-errors");
+                    var valEmail = $("#form_email").val();
+                    $result.text("");
+
+                    if (!validateEmail(valEmail)) {
+                        formValidationErrors = "L'adresse mail \""+ valEmail +"\" n'est pas valide !";
+                    }
+                    return false;
+
+                }
+                function lastnamevalidate() {
+                    var $result = $("#modal-errors");
+                    var valLastname = $("#form_lastname").val();
+                    $result.text("");
+
+                    if (valLastname.length < 3) {
+			formValidationErrors += "<br />Le nom \""+ valLastname + "\" doit avoir au moins 3 caractères !";
+                    }
+                }
+		function firstnamevalidate() {
+                    var $result = $("#modal-errors");
+                    var valFirstname = $("#form_firstname").val();
+                    $result.text("");
+
+                    if (valFirstname.length < 3) {
+                        $result.text("Le prénom \""+ valFirstname + "\" doit avoir au moins 3 caractères !");
+                        $result.css("color", "red").css("font-weight", "bold");
+                    }
+                    return false;
+
+                }
+
+var data = str.replace(/"/g,"");
+ /*var str = data.responseText;
+                            console.log(str);
+                            var resultdata = str.replace(/"/g,"");*/

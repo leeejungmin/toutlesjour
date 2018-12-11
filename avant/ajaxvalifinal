@@ -1,0 +1,260 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ "Employee Teams"|trans }}{% endblock %}
+
+{% block pageContent %}
+
+{% if teams is defined %}
+    {% embed "AppBundle:Component:table.html.twig" %}
+        {% block title %}{{ "Employee Teams"|trans }}{% endblock %}
+        {% block top %}
+
+            <a href="{{ path('app_company_employee_team_export', {"company": company.id}) }}" target="_blank" class="btn btn-primary pull-right">{{ 'action.btn.export.csv'|trans }}</a>
+            </br>
+            </br>
+        <div class="team-legend">
+            Légende :
+            <ul class="list-inline">
+                <li>Accès utilisateur <i class="fa fa-user font-green"></i> ACTIVE / <i class="fa fa-user font-red"></i> DESACTIVE </li>
+                <li>Contrat <i class="fa fa-file font-green"></i> Actif / <i class="fa fa-file font-red"></i> INACTIF</li>
+                <li>Accès Manager <i class="fa fa-exchange font-green"></i> ACTIVE / <i class="fa fa-exchange font-red"></i> DESACTIVE</li>
+            </ul>
+        </div>
+        {% endblock %}
+        {% block thead %}
+            <button id="click" class="btn btn-primary pull-right">Down</button>
+            <tr>
+                <th>{{ "Title"|trans }}</th>
+                <th>{{ "Managers externes" }}</th>
+                <th>{{ "Managers"|trans }}</th>
+                <th>{{ "Employees"|trans }}</th>
+                <th>{{ "Actions"|trans }}</th>
+            </tr>
+        {% endblock %}
+        {% block tbody %}
+            {% for team in teams %}
+                <tr>
+
+                    {% set ts = attribute(teamStatuses, team.id)|default %}
+                    <td>{{ team.title }}</td>
+                    <td>
+                        <ul class="list-unstyled">
+                        {% for user in team.externalManagers %}
+                            {% set us = attribute(ts.user_status, user.id)|default(false) %}
+                            <li>
+                                <i class="fa fa-user {% if us %}font-green{% else %}font-red{% endif %}"></i>
+                                <i class="fa fa-exchange {% if us and us.is_manager %}font-green{% else %}font-red{% endif %}"></i>
+                                {{ user.lastName }} {{ user.firstName }} ({{ user.email }})</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul class="list-unstyled">
+                        {% for employee in team.managers %}
+                            {% set e = attribute(ts.employee_status, employee.id)|default(false) %}
+                            {% if e %}
+                            {% set us = attribute(ts.user_status, e.user_id)|default(false) %}
+                            <li>
+                                <i class="fa fa-user {% if e.user_id %}font-green{% else %}font-red{% endif %}"></i>
+                                <i class="fa fa-file {% if e.is_active %}font-green{% else %}font-red{% endif %}"></i>
+                                <i class="fa fa-exchange {% if us and us.is_manager %}font-green{% else %}font-red{% endif %}"></i>
+                                {{ e.serial }} - {{ e.lastName }} {{ e.firstName }} {% if e.email %}({{ e.email }}){% endif %}</li>
+                            {% else %}
+                            <li> {{ e.id }} XXXX</id>
+                            {% endif %}
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul class="list-unstyled">
+                            {% for employee in team.employees %}
+                            {% set e = attribute(ts.employee_status, employee.id)|default(false) %}
+                            {% if e %}
+                            <li>
+                                <i class="fa fa-user {% if e.user_id %}font-green{% else %}font-red{% endif%}"></i>
+                                <i class="fa fa-file {% if e.is_active %}font-green{% else %}font-red{% endif%}"></i>
+                                {{ e.serial }} - {{ e.lastName }} {{ e.firstName }} {% if e.email %}({{ e.email }}){% endif %}</li>
+                            {% else %}
+                            </li> {{ e.id }} XXXX</id>
+                            {% endif %}
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <a href="{{ path('app_company_employee_team_edit', {'company':company.id, 'team': team.id}) }}" class="btn btn-default">{{ 'action.edit'|trans }}</a>
+                        {{ form_start(deleteForms[team.id]) }}
+                        {{ form_widget(deleteForms[team.id]) }}
+                        <button class="btn btn-danger">{{ 'action.delete'|trans }}</button>
+                        {{ form_end(deleteForms[team.id]) }}
+                    </td>
+                </tr>
+            {% else %}
+            {% endfor %}
+        {% endblock %}
+        {% block tfoot %}
+        {% endblock %}
+    {% endembed %}
+{% endif %}
+<div id="scrolldown"></div>
+    {#popup for create manager form#}
+
+
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        {{ 'action.create.Manager'|trans }}
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">{{ 'action.create.Manager'|trans }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+{#add creer manager#}
+                <div id="popup_team_manager_create_form" class="modal-body">
+
+                   <form id="create_manager_form"  method="POST" class="form-horizontal">
+                        <div id="company_user_access">
+                        <div class=" form-group "><label class="col-sm-2" for="company_user_access_email">Email</label>
+                        <div class="col-sm-10"><div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                        <input type="email" id="form_email" name="company_user_access[email]" required="required" class="form-control" />
+                </div></div></div>
+                    <div class=" form-group "><label class="col-sm-2" for="company_user_access_lastName">
+                    Nom
+                    </label><div class="col-sm-10"><input type="text" id="form_lastname" name="company_user_access[lastName]" required="required" class="form-control" />        </div>
+                </div><div class=" form-group "><label class="col-sm-2" for="company_user_access_firstName">
+                    Prénom
+                    </label><div class="col-sm-10"><input type="text" id="form_firstname" name="company_user_access[firstName]" required="required" class="form-control" /></div></div>
+                  <div class="form-group"><div class="col-sm-2"></div><div class="col-sm-10"><div class="mt-checkbox-list"><label class="mt-checkbox ">
+                 <input type="checkbox" id="company_user_access_enabled" name="company_user_access[enabled]" value="1" required="required" checked="checked" /> Activé<span></span>
+                </label>
+                </div>
+               </div>
+
+              </div>
+             <input type="hidden" id="company_user_access__token" name="company_user_access[_token]" value="zyC5VIXkmDjA4crTGKeLS3RE5-oZL4NzoKN9YkkJDmg" />
+            </div>
+
+
+                    <div id="modal-errors">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-danger" data-dismiss="modal" aria-label="Close">{{ 'action.cancel'|trans }}</button>
+                        <button type="submit" id="managercreate" class="btn btn-primary" >{{ 'action.create.Manager'|trans }}</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        </div>
+        </div>
+
+
+
+
+{{ form_start(form) }}
+{{ form_widget(form) }}
+{% if not (teams is defined) %}
+<a href="{{ path('app_company_employee_team_index', { 'company': company.id })}}" class="btn btn-default">{{ 'action.cancel'|trans }}</a>
+{% endif %}
+<button type="submit" class="btn btn-primary">
+    {% if deleteForms is defined %}{{ 'action.add_team'|trans }}{% else %}{{ 'action.update_team'|trans }}{% endif %}
+</button>
+{{ form_end(form) }}
+
+{% endblock %}
+{% block pagescript %}
+    <script>
+
+
+
+
+        $(document).ready(function() {
+            //button for scrolldoawn
+            $("#click").click(function (){
+                $('html, body').animate({
+                    scrollTop: $("#scrolldown").offset().top
+                }, 2000);
+            });
+            //after page reload action
+            if(localStorage.getItem('employeeTeamCreateManagerScrollDownFlag')!=null){
+                $(window).load(function() {
+                    $("html, body").animate({scrollTop: $("#scrolldown").offset().top
+                    }, 2000);
+                    localStorage.removeItem('employeeTeamCreateManagerScrollDownFlag');
+                });}
+            //option A
+            console.log("enter page");
+
+            $("#create_manager_form").submit(function(e) {
+                e.preventDefault(e);
+                //pagedown action
+
+                alert('1');
+
+
+
+                var data;
+                data = $('#popup_team_manager_create_form form').serialize();
+                {#var url = "{{ path('app_company_planning_validatedata', {'company': company.id,'team': 'teamId', 'start': start | date('Y-m-d') } ) }}";
+                #}
+                console.log(data);
+                var url = "{{ path('app_company_useraccess_newmanagercreationfromteampage', {'company': company.id } ) }}";
+                //document.getElementById("create_manager_form").submit();
+                alert('2');
+
+                //var url= url.replace("teamId", teamId);
+                //down to the form
+                console.log("success go down to the page!");
+                localStorage.setItem('employeeTeamCreateManagerScrollDownFlag', 'yes');
+
+                console.log(data);
+
+                alert('3');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    traditional: true,
+                    dataType: 'json',
+                    data : data,
+                    success: function (res) {
+                        console.log("success");
+                    },
+
+                    done: function(data){
+                        console.log("done");
+                    },
+                    complete: function(data) {
+                        if(data.statusText=="OK"){
+                            console.log("complete");
+                            console.log(data);
+                            //var equipeID = $("#select_equipe").val();
+                            //var urlNew = window.location.pathname+"?idTeam="+equipeID;
+                    {#                           var urlNew = window.location.pathname;
+                                               var urlNew =  "{{ path('app_company_employee_team_index', {'company': company.id } ) }}";
+                                               document.location.href= urlNew;
+                           #}
+                            //todo: load the page with the Team
+                            {# var urlNew =  "{{ path('app_company_employee_team_treat', {'company': company.id } ) }}"; #}
+                            //document.location.href= urlNew;
+                            //location.reload();
+                        }else{
+                            document.getElementById('modal-errors').innerHTML = data;
+                        }
+                    }
+                });
+
+                alert('4');
+            });
+
+
+        });
+
+
+    </script>
+{% endblock %}

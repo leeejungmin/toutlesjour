@@ -1,0 +1,56 @@
+->add('collectiveAgreement', EntityType::class, array(
+               'class' => 'SageBundle:Reference\CollectiveAgreement',
+               'choice_label' => 'title',
+               'preferred_choices' => function($val, $key) use ($companyCollectiveAgreementIdcc) {
+                   if ($val && $val->getIdcc() == $companyCollectiveAgreementIdcc)
+                       return true;
+                   return false;
+               }
+           ))
+           ->add('department', EmployeeJobSectionType::class, array(
+               'class' => 'SageBundle:Company\Department',
+               'company' => $company,
+               'required' => false
+           ))
+           ->add('service', EmployeeJobSectionType::class, array(
+               'class' => 'SageBundle:Company\Service',
+               'company' => $company,
+               'required' => false
+           ))
+           ->add('unit', EmployeeJobSectionType::class, array(
+               'class' => 'SageBundle:Company\Unit',
+               'company' => $company,
+               'required' => false
+           ))
+           /*
+           ->add('category', EmployeeJobSectionType::class, array(
+               'class' => 'SageBundle:Company\Category',
+               'company' => $company,
+               'required' => false
+           ))
+
+
+           */
+           ->add('jobHeld', TextType::class, array(
+               'required' => true
+           ))
+           ->add('jobIndex', TextType::class, array(
+               'required' => false
+           ))
+           ->add('qualification', TextType::class, array(
+               'required' => false
+           ))
+           ->add('level', TextType::class, array(
+               'required' => false
+           ))
+           //->add('minimumWage', MoneyType::class)
+           ->add('coefficient', TextType::class, array(
+               'required' => false
+           ))
+           ->add('paymentMode', ChoiceType::class, array(
+               'choices' => array(
+                   '' => null,
+                   'Transfer' => ExportManager::PAYMENT_MODE_TRANSFERT,
+                   'Check' => ExportManager::PAYMENT_MODE_CHECK
+               )
+           ));

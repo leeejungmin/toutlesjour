@@ -1,0 +1,22 @@
+Peu après, la confirmation est tombée avec des détails accablants .
+
+
+
+
+font-size: 150%; ==> Très grand
+font-size: 120%; ==> grand
+
+font-size: 100%; ==> Très grand
+
+font-size: 80%; ==> pETIT
+font-size: 60%; ==> TRES PETIT
+
+
+CLASS
+
+
+variable-white-brand-page-container huge
+variable-white-brand-page-container big
+variable-white-brand-page-container normal
+variable-white-brand-page-container small
+variable-white-brand-page-container very-small

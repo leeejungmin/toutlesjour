@@ -1,0 +1,18 @@
+$employees = $this->get('app.manager.user')->getManagedEmployeeByCompany($company);
+
+            $repo = $this->getDoctrine()->getRepository('SageBundle:Employee');
+            $employees = $repo->getEmployeeList($company, $data, $employees);
+            //TODO: Display actions according to role
+            if ($this->isGranted(UserAccessVoter::ACCESS_MANAGER_ONLY, $company)) {
+
+
+
+
+
+
+
+
+var url= String({{ "http://digi-paye.local:8080#{path('app_company_employee_team_index', { 'company': company.id })}" }});
+        function myFunction() {
+            window.open('http://digi-paye.local', "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=500,left=500,width=400,height=400");
+        }

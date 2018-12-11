@@ -1,0 +1,70 @@
+
+            <div class="form-popup" id="myForm">
+                <form action="/action_page.php" class="form-container">
+                    <h1>Login</h1>
+
+                    <label for="email"><b>Email</b></label>
+                    <input type="text" placeholder="Enter Email" name="email" required>
+
+                    <label for="psw"><b>Password</b></label>
+                    <input type="password" placeholder="Enter Password" name="psw" required>
+
+                    <button type="submit" class="btn">Login</button>
+                    <button type="button" class="btn btn-default" onclick="closeForm()">Close</button>
+                </form>
+            </div>
+
+
+
+
+
+
+
+
+
+                var data;
+
+
+                data = $('form').serialize();
+                {#var url = "{{ path('app_company_planning_validatedata', {'company': company.id,'team': 'teamId', 'start': start | date('Y-m-d') } ) }}";
+                #}
+                console.log(data);
+                var url = "{{ path('app_company_employee_team_index', {'company': company.id } ) }}";
+
+                //var url= url.replace("teamId", teamId);
+                //down to the form
+                console.log("success go down to the page!");
+                localStorage.setItem('myCat', 'Tom');
+
+                $.ajax({
+                    //url: url,
+                    type: 'POST',
+                    traditional: true,
+                    dataType: 'json',
+                    data : data,
+                    success: function (res) {
+                    },
+
+                    done: function(data){
+                    },
+                    complete: function(data) {
+                        if(data.statusText=="OK"){
+                            console.log("complete");
+                            console.log(data);
+                            //var equipeID = $("#select_equipe").val();
+                            //var urlNew = window.location.pathname+"?idTeam="+equipeID;
+                            var urlNew = window.location.pathname+"?jungmin";
+                            //var urlNew =  "{{ path('app_company_employee_team_index', {'company': company.id } ) }}";
+                            document.location.href= urlNew;
+                            $('html, body').animate({
+                                scrollTop: $("#scrolldown").offset().top
+                            }, 2000);
+                            console.log('after submit');
+                            console.log(data);
+                            //Reload the page
+                            //todo: load the page with the Team
+                            //location.reload();
+                        }
+                    }
+                });
+

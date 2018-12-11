@@ -1,0 +1,74 @@
+$(document).ready(function() {
+              if(localStorage.getItem('planningShowHideFiltersFlag')!= undefined){
+             if(localStorage.getItem('planningShowHideFiltersFlag') =="yes"){
+                 $('.table-filter-wrapper ,#hide_show_layout_one, #hide_show_layout_second').hide(800);
+                 $('#show_hide_filter_button').html('Afficher les filtres et la légende');
+             }
+         }
+
+         //Show and hide Filters
+         $('#show_hide_filter_button').click(function(){
+             if($('.table-filter-wrapper').is(":visible") === true){
+                 localStorage.setItem('planningShowHideFiltersFlag', 'yes');
+                  $('#show_hide_filter_button').html('Afficher les filtres et la légende');
+             }else{
+                 localStorage.setItem('planningShowHideFiltersFlag', '');
+                  $('#show_hide_filter_button').html('Cacher les filtres et la légende');
+             }
+             $('.table-container .table-filter-wrapper ,#hide_show_layout_one, #hide_show_layout_second').toggle(800);
+         });
+
+
+         $(document).ready(function() {
+                         if(localStorage.getItem('planningShowHideFiltersFlag')!= undefined){
+                             if(localStorage.getItem('planningShowHideFiltersFlag') =="yes"){
+                                 $('.table-container .table-filter-wrapper ,#hide_show_layout, ').hide(800);
+                                 $('#show_hide_filter_button').html('Afficher les filtres');
+                             }
+                         }
+
+                         //Show and hide Filters
+                         $('#show_hide_filter_button').click(function(){
+                             if($('.table-filter-wrapper').is(":visible") === true){
+                                 localStorage.setItem('planningShowHideFiltersFlag', 'yes');
+                                 $('#show_hide_filter_button').html('Afficher les filtres');
+                             }else{
+                                 localStorage.setItem('planningShowHideFiltersFlag', '');
+                                 $('#show_hide_filter_button').html('Cacher les filtres');
+                             }
+                             $('.table-container .table-filter-wrapper ,#hide_show_layout').toggle(800);
+                         });
+
+
+         <div id="showhidefilter" >
+        <button id="show_hide_filter_button" type="button" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-plus">{{ 'hide_filter'|trans }}</span></button>
+        </div>
+
+
+           <trans-unit id="hide_filter_légende">
+                          <source>hide_filter_légende</source>
+                          <target>Cacher les filtres et la légende</target>
+                      </trans-unit>
+                      <trans-unit id="show_filter_légende">
+                          <source>show_filter_légende</source>
+                          <target>Afficher les filtres et la légende</target>
+                      </trans-unit>
+
+           <trans-unit id="hide_filter">
+                          <source>hide_filter</source>
+                          <target>Cacher les filtres</target>
+                      </trans-unit>
+                      <trans-unit id="show_filter">
+                          <source>show_filter</source>
+                          <target>Afficher les filtres</target>
+                      </trans-unit>
+
+
+           <trans-unit id="hide_légende">
+                          <source>hide_légende</source>
+                          <target>Cacher la légende</target>
+                      </trans-unit>
+                      <trans-unit id="show_légende">
+                          <source>show_légende</source>
+                          <target>Afficher la légende</target>
+                      </trans-unit>

@@ -1,0 +1,27 @@
+
+        <div>
+        <select>
+            <option value="0">{{ 'variable.white.brand.page.container_huge'|trans }}</option>
+            <option value="1">{{ 'variable.white.brand.page.container_big'|trans }}</option>
+            <option value="2">{{ 'variable.white.brand.page.container_normal'|trans }}</option>
+            <option value="3">{{ 'variable.white.brand.page.container_small'|trans }}</option>
+            <option value="4">{{ 'variable.white.brand.page.container_very_small'|trans }}</option>
+        </select>
+    </div>
+
+    var fontSize = parseInt($("#hot").css("font-size"));
+        fontSize = fontSize + 150 + "%";
+        $("#hot").css({'font-size':fontSize});
+
+    var fontSize = parseInt($("#hot").css("font-size"));
+        fontSize = fontSize + 120 + "%";
+        $("#hot").css({'font-size':fontSize});
+    var fontSize = parseInt($("#hot").css("font-size"));
+        fontSize = fontSize + 100 + "%";
+        $("#hot").css({'font-size':fontSize});
+    var fontSize = parseInt($("#hot").css("font-size"));
+        fontSize = fontSize + 80 + "%";
+        $("#hot").css({'font-size':fontSize});
+    var fontSize = parseInt($("#hot").css("font-size"));
+        fontSize = fontSize + 60 + "%";
+        $("#hot").css({'font-size':fontSize});

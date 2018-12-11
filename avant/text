@@ -1,0 +1,20 @@
+<trans-unit id="variable.white.brand.page.container_huge">
+              <source>variable.white.brand.page.container_huge</source>
+              <target>Très grand</target>
+          </trans-unit>
+          <trans-unit id="variable.white.brand.page.container_big">
+              <source>variable.white.brand.page.container_big</source>
+              <target>grand</target>
+          </trans-unit>
+          <trans-unit id="variable.white.brand.page.container_normal">
+              <source>variable.white.brand.page.container_normal</source>
+              <target>normalité</target>
+          </trans-unit>
+          <trans-unit id="variable.white.brand.page.container_small">
+              <source>variable.white.brand.page.container_small</source>
+              <target>Petit</target>
+          </trans-unit>
+          <trans-unit id="variable.white.brand.page.container_very_small">
+              <source>variable.white.brand.page.container_very_small</source>
+              <target>Très petit</target>
+          </trans-unit>

@@ -1,0 +1,69 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ "Debug"|trans }}{% endblock %}
+
+<div class="ScheduleModeleScroll">
+        <table>
+            <tr>
+                <th>id</th>
+                <th>headerCode</th>
+                <th>module</th>
+                <th>step</th>
+                <th>uri</th>
+                <th>sent</th>
+                <th>returnServer</th>
+                <th>returnCurl</th>
+                <th>comment</th>
+                <th>DateTime</th>
+            </tr>
+            {% for debug in debugs %}
+            <tr>
+                <th>{{debug.id}}</th>
+                <th>{{debug.headerCode}}</th>
+                <th>{{debug.module}}</th>
+                <th>{{debug.step}}</th>
+                <th>{{debug.uri}}</th>
+                <th>{{debug.sent}}</th>
+                <th>{{debug.returnServer}}</th>
+                <th>{{debug.returnCurl}}</th>
+                <th>{{debug.comment}}</th>
+                <th>{{debug.DateTime|date('Y-m-d') }}</th>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <hr>
+        <p>id :{{debug.id}}</p>
+      <p>headerCode :{{debug.headerCode}}</p>
+      <p>module :{{debug.module}}</p>
+      <p>step :{{debug.step}}</p>
+      <p>uri :{{debug.uri}}</p>
+      <p>returnServer :{{debug.returnServer}}</p>
+      <p>returnCurl :{{debug.returnCurl}}</p>
+      <p>comment :{{debug.comment}}</p>
+      <p>DateTime :{{debug.DateTime|date('Y-m-d') }}</p>
+
+
+
+<Input type="button" class="fa fa-history" onclick="location.href={{ path('debug', {'id': debug.id }) }}"></Input>
+
+{% stylesheets%}
+        <style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+    </style>
+{% endstylesheets %}
+</div>

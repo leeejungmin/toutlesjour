@@ -1,0 +1,55 @@
+Louis21Bundle\Entity\Contract:
+   type: entity
+   table: louis21_Contract
+   repositoryClass: Louis21Bundle\Repository\Contract
+   id:
+       id:
+           type: integer
+           id: false
+           generator:
+               strategy: AUTO
+
+   fields:
+       jobTitle:
+           type: string
+           length: 10
+           nullable: false
+       contractType:
+           type: string
+           length: 10
+           nullable: true
+       startDate:
+           type: date
+           length: 30
+           nullable: false
+       endDate:
+           type: date
+           length: 30
+           nullable: false
+       company:
+           type: string
+           length: 30
+           nullable: false
+       businessUnit:
+           type: string
+           length: 160
+           nullable: false
+       taskName:
+           type: string
+           length: 160
+           nullable: true
+       taskDescription:
+           type: string
+           length: 130
+           nullable: true
+       skills:
+           type: string
+           length: 15
+           nullable: true
+       createdAt:
+           type: datetime
+           column: created_at
+           gedmo:
+               timestampable:
+                   on: create
+   lifecycleCallbacks: {  }

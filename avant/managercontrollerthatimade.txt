@@ -1,0 +1,124 @@
+<?php
+
+namespace AppBundle\Controller\Company\Employee;
+
+use SageBundle\Entity\Company;
+use SageBundle\Entity\Employee\Team;
+use SageBundle\Form\Employee\TeamType;
+use AppBundle\Form\CompanyUserAccessThreeType;
+use AppBundle\Security\UserAccessVoter;
+use AppBundle\Entity\UserAccess;
+use SageBundle\Entity\Employee;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Form\FormError;
+
+/**
+ * @Route("/employee/manager")
+ */
+class ManagerController extends Controller
+{
+    /**
+     * @Route("/test")
+     * @Security("is_granted('DIGIPAYE_COMPANY_EDIT', company)")
+     */
+    public function testAction(Company $company, Request $request)
+    {
+       
+        //make managerform
+        $userAccessManager = $this->get('app.manager.user_access');
+        $userAccess = $userAccessManager->createAccess($this->getUser());
+        $userAccess->setCompany($company);
+        //setAccessType pas sur
+        $userAccess->setAccessType(UserAccessVoter::ACCESS_MANAGER);
+
+        $formanger = $this->createForm(CompanyUserAccessThreeType::class, $userAccess, array(
+            'validation_groups' => array('NewAccess', 'CompanyAccess')
+        ));
+
+
+
+        if ($formanger->isSubmitted() && $formanger->isValid()) {
+            //dump($formanger);
+            //die;
+            // Handle $form2
+            $manager = $this->getDoctrine()->getManager();
+
+            $email = $formanger->get('email')->getData();
+            //Get User or Create it and send invite
+            $userManager = $this->get('app.manager.user');
+            $user = $userManager->getUserByEmail($email, true,
+                $formanger->get('lastName')->getData(),
+                $formanger->get('firstName')->getData()
+            );
+
+            //Detect if the user are Whitebrand
+            $userWhiteBrand = $this->get('app.user_type_manager')->getUserWhiteBrandID();
+            //TRUE=DRH WhiteBrand
+            if ($userWhiteBrand) {
+                $whiteBrand = $this->getDoctrine()->getRepository('AppBundle:WhiteLabel')->find($userWhiteBrand);
+                $userAccess->setWhiteLabel($whiteBrand);
+                $userAccess->setWhiteBrandLevel("CLIENT MARQUE BLANCHE");
+            }
+
+            //Check Valid
+            $userAccess->setUser($user);
+            $userAccess->setCompany($company);
+            $validator = $this->get('validator');
+            $errors = $validator->validate($userAccess, null, array('NewAccess', 'CompanyAccess'));
+
+            if (count($errors)) {
+                foreach ($errors as $error) {
+                    $formanger->addError(new FormError($error->getMessage()));
+                }
+            } else {
+                $manager->persist($userAccess);
+                $manager->flush();
+
+                $userManager->sendInvitation($user, $userAccess);
+
+                $this->addFlash('success', 'flash.user_access.created.success');
+                return $this->redirectToRoute('app_company_employee_team_index', array(
+                    'company' => $company->getId()
+                ));
+            }
+        }
+    }
+
+    /**
+     * @Route("/")
+     */
+    public function indexAction(Request $request) {
+        dump($request);
+        die;
+        if ($request->isXmlHttpRequest()) {
+            //~ Is AJAX Request
+            dump($request);
+            die;
+            $offset = $request->get('offset');
+            $limit = $request->get('limit');
+
+            $manager = $this->getDoctrine()->getManager();
+
+            $objects = $manager->createQueryBuilder()
+                ->select('o')
+                ->from('ThreedBundle:Threedobject',  'o')
+                ->where('o.status = 2 AND o.showGallery = 1')
+                ->getQuery()
+                ->setFirstResult($offset)
+                ->setMaxResults($limit)
+                ->getResult();
+        } else {
+            //~ Request is not AJAX
+        }
+        return response('tu es bonnn');
+    }
+}
