@@ -1,0 +1,30 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'action.add_employee'|trans }}{% endblock %}
+
+{% block pageContent %}
+<div class="portlet">
+    <div class="portlet-body form">
+        <button name="" id="" class="btn btn-primary pull-right" data-target="#DuplicateEmploye" data-toggle="modal">{{ 'action.duplicate_employee'|trans }}</button>
+        {{ form_start(formInterim) }}
+        <div class="form-body">
+            <h3 class="form-section">{{ 'form.label.civilstatus'|trans }}</h3>
+            {{ form_widget(formInterim.people) }}
+            <h3 class="form-section">{{ 'Contract'|trans }}</h3>
+            {{ form_row(formInterim.contract.establishment )}}
+            {{ form_row(formInterim.contract.type) }}
+            {{ form_row(formInterim.contract.typeReason, {'value' : setTypeReason|number_format})}}
+            {{ form_row(formInterim.contract.startDate) }}
+            {{ form_row(formInterim.contract.endDate) }}
+            {{ form_row(formInterim.employee.healthcare) }}
+            <h3 class="form-section">{{ 'PaySlip'|trans }}</h3>
+            {{ form_widget(formInterim.payslip) }}
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-default" href="{{ path('app_company_employee_index', { 'company' : company.id })}}"> {{ 'action.cancel'|trans }}</a>
+            <button class="btn btn-primary" type="submit" value="create">{{ "action.add_employee"|trans }}</button>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
