@@ -8,8 +8,9 @@ use SageBundle\Form\Employee\ContractType;
 use SageBundle\Form\Employee\EstablishmentType;
 use SageBundle\Form\Employee\JobType;
 use SageBundle\Form\Employee\PaySlipType;
-use SageBundle\Form\Workflow\AddPeopleForInterimType;
-use SageBundle\Form\Workflow\AddContractForInterimType;
+use SageBundle\Form\Workflow\AddPeopleForStagiereType;
+use SageBundle\Form\Workflow\AddContractForStagiereType;
+use SageBundle\Form\Workflow\AddPaySlipForStagiereType;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -20,7 +21,7 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 
-class AddInterimWorkflowType extends AbstractType
+class AddStagiereWorkflowType extends AbstractType
 {
 
     /**
@@ -30,13 +31,18 @@ class AddInterimWorkflowType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('people', AddPeopleForInterimType::class, array(
+            ->add('people', AddPeopleForStagiereType::class, array(
                 'label' => 'Civil Status',
                 'constraints' => new \Symfony\Component\Validator\Constraints\Valid(),
             ))
-            ->add('contract', AddContractForInterimType::class, array(
+            ->add('contract', AddContractForStagiereType::class, array(
                 'label' => 'Contract',
                 'end' => false,
+                'company' => $options['company'],
+                'constraints' => new \Symfony\Component\Validator\Constraints\Valid(),
+            ))
+            ->add('payslip', AddPaySlipForStagiereType::class, array(
+                'label' => 'Pay',
                 'company' => $options['company'],
                 'constraints' => new \Symfony\Component\Validator\Constraints\Valid(),
             ))

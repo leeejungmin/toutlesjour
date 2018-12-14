@@ -3,28 +3,86 @@
 {% block title %}{{ 'action.add_employee'|trans }}{% endblock %}
 
 {% block pageContent %}
-<div class="portlet">
-    <div class="portlet-body form">
-        <button name="" id="" class="btn btn-primary pull-right" data-target="#DuplicateEmploye" data-toggle="modal">{{ 'action.duplicate_employee'|trans }}</button>
-        {{ form_start(formInterim) }}
-        <div class="form-body">
-            <h3 class="form-section">{{ 'form.label.civilstatus'|trans }}</h3>
-            {{ form_widget(formInterim.people) }}
-            <h3 class="form-section">{{ 'Contract'|trans }}</h3>
-            {{ form_row(formInterim.contract.establishment )}}
-            {{ form_row(formInterim.contract.type) }}
-            {{ form_row(formInterim.contract.typeReason, {'value' : setTypeReason|number_format})}}
-            {{ form_row(formInterim.contract.startDate) }}
-            {{ form_row(formInterim.contract.endDate) }}
-            {{ form_row(formInterim.employee.healthcare) }}
-            <h3 class="form-section">{{ 'PaySlip'|trans }}</h3>
-            {{ form_widget(formInterim.payslip) }}
+    <div class="container">
+        <h2>Types d'extern</h2>
+        <div class="form-group">
+            <label for="sel1">Select list (select one):</label>
+            <select class="form-control" id="sel1">
+                <option value="interim">{{ "variable.show.interim"|trans }}</option>
+                <option value="stage">{{ "variable.show.stage"|trans }}</option>
+            </select>
         </div>
-        <div class="form-actions">
-            <a class="btn btn-default" href="{{ path('app_company_employee_index', { 'company' : company.id })}}"> {{ 'action.cancel'|trans }}</a>
-            <button class="btn btn-primary" type="submit" value="create">{{ "action.add_employee"|trans }}</button>
-        </div>
-        {{ form_end(form) }}
     </div>
-</div>
+    <hr/>
+    <div class="Interim-body">
+        <div class="portlet">
+            <h2>LE Intérimaire</h2>
+            <div class="portlet-body form">
+                {{ form_start(formInterim) }}
+                <div class="form-body">
+                    <h3 class="form-section">{{ 'form.label.civilstatus'|trans }}</h3>
+                    {{ form_widget(formInterim.people) }}
+                    <h3 class="form-section">{{ 'Contract'|trans }}</h3>
+                    {{ form_row(formInterim.contract.establishment )}}
+                    {{ form_row(formInterim.contract.type) }}
+                    {{ form_row(formInterim.contract.typeReason, {'value' : setTypeReason|number_format})}}
+                    {{ form_row(formInterim.contract.startDate) }}
+                    {{ form_row(formInterim.contract.endDate) }}
+                </div>
+                <div class="form-actions">
+                    <a class="btn btn-default" href="{{ path('app_company_employee_index', { 'company' : company.id })}}"> {{ 'action.cancel'|trans }}</a>
+                    <button class="btn btn-primary" type="submit" value="create">{{ "action.add_extern"|trans }}</button>
+                </div>
+                {{ form_end(formInterim) }}
+            </div>
+        </div>
+    </div>
+    <div class="stagiere-body">
+        <div class="portlet">
+            <h2>LE Stagiaires</h2>
+            <div class="portlet-body form">
+                {{ form_start(formstagiere) }}
+                <div class="form-body">
+                    <h3 class="form-section">{{ 'form.label.civilstatus'|trans }}</h3>
+                    {{ form_widget(formstagiere.people) }}
+                    <h3 class="form-section">{{ 'Contract'|trans }}</h3>
+                    {{ form_row(formstagiere.contract.establishment )}}
+                    {{ form_row(formstagiere.contract.type) }}
+                    {{ form_row(formstagiere.contract.startDate) }}
+                    {{ form_row(formstagiere.contract.endDate) }}
+                    {# <h3 class="form-section">{{ 'PaySlip'|trans }}</h3>
+                     {{ form_widget(formstagiere.payslip) }}#}
+                </div>
+                <div class="form-actions">
+                    <a class="btn btn-default" href="{{ path('app_company_employee_index', { 'company' : company.id })}}"> {{ 'action.cancel'|trans }}</a>
+                    <button class="btn btn-primary" type="submit" value="create">{{ "action.add_extern"|trans }}</button>
+                </div>
+                {{ form_end(formstagiere) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block pagescript %}
+    <script>
+        jQuery(document).ready(function() {
+            Digipay.init();
+            //$(".stagiere-body,.Interim-body").hide();
+            $("div.form-group select").change(function() {
+
+                if($(this).val()==='interim'){
+                    $(".Interim-body").show(800);
+                    $(".stagiere-body").hide(800);
+                    $('this option[value=interim]').prop('selected', true);
+                    $('this option[value=stage]').prop('selected', false);
+                }else if($(this).val()==='stage'){
+                    $(".stagiere-body").show(800);
+                    $(".Interim-body").hide(800);
+                    $('this option[value=stage]').prop('selected', true);
+                    $('this option[value=interim]').prop('selected', false);
+                };
+            })
+        });
+
+
+    </script>
 {% endblock %}

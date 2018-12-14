@@ -1,0 +1,12 @@
+
+
+
+<input type="submit" value="Do this" name="_dothis" /> 
+<input type="submit" value="Do that" name="_dothat" /> 
+
+Then your action can differentiate the chosen submit item as follows: 
+if ($request->hasParameter('_dothis')) { 
+    // do this 
+} elseif ($request->hasParameter('_dothat')) { 
+    // do that 
+} 

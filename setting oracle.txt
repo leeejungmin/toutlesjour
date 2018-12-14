@@ -1,0 +1,22 @@
+Identifiants
+outarocht.zakaria@gmail.com
+password :
+Digi_tF13@-d
+
+
+#Pour vider le cache et les logs
+sudo rm -rf var/cache/ 
+
+sudo rm -rf var/logs/
+
+sudo rm -rf var/sessions/
+
+sudo php bin/console cache:clear -env=dev
+
+sudo chown -R www-data var/
+sudo chown -R houssem var/
+
+php bin/console generate:doctrine:entities --no-backup SageBundle
+
+sudo chmod +x ./phpstorm
+sudo ./phpstorm
