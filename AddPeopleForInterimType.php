@@ -1,61 +1,77 @@
 <?php
 
-namespace SageBundle\Form\People;
+namespace SageBundle\Form\Workflow;
+
+use AppBundle\Form\Type\DatePickerType;
+use SageBundle\Form\SageReferenceEntityType;
+use SageBundle\Form\Employee\FileType;
 
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\ButtonType;
-use Symfony\Component\Form\Extension\Core\Type\BirthdayType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Doctrine\ORM\EntityRepository;
 
-class AddPeopleForInterimType extends AbstractType
+class AddContractForExternType extends AbstractType
 {
+
     /**
      * @param FormBuilderInterface $builder
      * @param array $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $company = $options['company'];
         $builder
-          /*  ->add('civility', ChoiceType::class, array(
-                'label' => 'form.label.civilstatus.civility',
-                'choices' => array(
-                    'M' => 0,
-                    'Mme' => 1,
-                    'Mlle' => 2
-                ),
-                'property_path' => 'civility'
+            /*->add('type', EntityType::class, array(
+                'class' => 'SageBundle:Reference\ContractType',
+                'choice_label' => function ($val) {
+                    return $val->getCode() . ' | ' . $val->getTitle();
+                }
+            ))*/
+            ->add('typeReason', SageReferenceEntityType::class, array(
+                'reference_type' => 'contract_type_reason',
+                'required' => false
             ))
-            ->add('personalPhone', null, array(
-                'label' => 'form.label.civilstatus.personal_phone',
-                'attr'=> array(
-                    'data-rule-digits' => true
-                )
+            ->add('startDate', DatePickerType::class, array(
+                'required' => true
             ))
-           */
-            ->add('lastName', null, array(
-                'label' => 'form.label.civilstatus.last_name',
+            ->add('endDate', DatePickerType::class, array(
+                'label' => 'Fini le',
             ))
-            ->add('firstName', null, array(
-                'label' => 'form.label.civilstatus.first_name',
+            ->add('universityName', TextType::class, array(
+                'label' => 'Nom de l\'école',
+                'required' => false,
             ))
-            ->add('email', EmailType::class, array(
-                'label' => 'form.label.civilstatus.email',
+            ->add('tutorName', TextType::class, array(
+                'label' => 'Nom du tuteur',
+                'required' => false,
+            ))
+            ->add('interimAgency', TextType::class, array(
+                'label' => 'Nom de l’agence d’intérim de rattachement',
+                'required' => false,
             ))
 
-            ->add('birthdate', BirthdayType::class, array(
-                'label' => 'form.label.registration.birthdate',
-                'attr' => array('class'=>'select2-nosearch form-inline-birthdate'),
-                'years'=> range(date('Y') - 100, date('Y'))
-            ))
-            ->add('birthCity', TextType::class, array(
-                'label' => 'form.label.registration.birth_city',
-            ))
+
         ;
     }
+    ->add('universityName', EntityType::class, array(
+                'class' => 'SageBundle:Employee\Contract',
+                'label' => 'Nom de l\'école',
+                'required' => false,
+            ))
+            ->add('tutorName', EntityType::class, array(
+                'class' => 'SageBundle:Employee\Contract',
+                'label' => 'Nom du tuteur',
+                'required' => false,
+            ))
+            ->add('interimAgency', EntityType::class, array(
+                'class' => 'SageBundle:Employee\Contract',
+                'label' => 'Nom de l’agence d’intérim de rattachement',
+                'required' => false,
+            ))
 
     /**
      * @param OptionsResolver $resolver
@@ -63,7 +79,9 @@ class AddPeopleForInterimType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
-            'data_class' => 'SageBundle\Entity\People'
+            'company' => null,
+            'data_class' => 'SageBundle\Entity\Employee\Contract',
+            'validation_groups' => array('Default', 'FixContract')
         ));
     }
 }

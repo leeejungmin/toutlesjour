@@ -1,36 +1,27 @@
 {% extends "::app-layout.html.twig" %}
 
-{% block title %}Types d'extern{% endblock %}
+{% block title %}{{ 'action.add_extern'|trans }}{% endblock %}
 
 {% block pageContent %}
-    <div class="container">
-        <div class="form-group">
-            <label id='labelinterm'for="selectlistforextern">Select list :{{ "variable.show.interim"|trans }}</label>
-            <label id='labelstage'for="selectlistforextern">Select list :{{ "variable.show.stage"|trans }}</label>
-            <select class="form-control" id="selectlistforextern">
-                <option value="interim">{{ "variable.show.interim"|trans }}</option>
-                <option value="stage">{{ "variable.show.stage"|trans }}</option>
-            </select>
-        </div>
-    </div>
-    <hr/>
-    <div class="Interim-title">
-        <h2>{{ "variable.show.interim"|trans }}</h2>
-    </div>
-    <div class="Stage-title">
-        <h2>{{ "variable.show.stage"|trans }}</h2>
-    </div>
     <div class="portlet">
         <div class="portlet-body form">
             {{ form_start(form) }}
+            {{ form_row(form.choiceoption) }}
+            <hr/>
             <div class="form-body">
+                <div class="Interim-title">
+                    <h2>{{ "variable.show.interim"|trans }}</h2>
+                </div>
+                <div class="Stage-title">
+                    <h2>{{ "variable.show.stage"|trans }}</h2>
+                </div>
                 <h3 class="form-section">{{ 'form.label.civilstatus'|trans }}</h3>
                 {{ form_row(form.people.lastName) }}
                 {{ form_row(form.people.firstName) }}
                 {{ form_row(form.people.socialSecurity) }}
                 <div class="stagiere-body">
                     {{ form_row(form.people.bankIban) }}
-                     {{ form_widget(form.payslip) }}
+                    {{ form_widget(form.payslip) }}
                 </div>
                 {{ form_row(form.people.birthdate) }}
                 {{ form_row(form.people.birthCity) }}
@@ -42,9 +33,14 @@
                 <h3 class="form-section">{{ 'Contract'|trans }}</h3>
                 <div class="Interim-body">
                     {{ form_row(form.contract.typeReason, {'value' : setTypeReason|number_format})}}
+                    {{ form_row(form.contract.interimAgency) }}
                 </div>
                 {{ form_row(form.contract.startDate) }}
                 {{ form_row(form.contract.endDate) }}
+                <div class="stagiere-body-two">
+                {{ form_row(form.contract.universityName) }}
+                {{ form_row(form.contract.tutorName) }}
+                </div>
             </div>
             <div class="form-actions">
                 <a class="btn btn-default" href="{{ path('app_company_employee_index', { 'company' : company.id })}}"> {{ 'action.cancel'|trans }}</a>
@@ -56,23 +52,25 @@
 
 {% endblock %}
 {% block pagescript %}
-<script>
+    <script>
         jQuery(document).ready(function() {
             Digipay.init();
-            $(".stagiere-body").hide();
-            $("div.form-group select").change(function() {
+            $(".stagiere-body,.Stage-title,#labelstage").hide();
+
+            $("#add_extern_workflow_choiceoption").change(function() {
 
                 if($(this).val()==='interim'){
                     $('html, body').animate({ scrollTop: 200 }, 500);
                     $(".Interim-body,.Interim-title,#labelinterm").show(800);
-                    $(".stagiere-body,.Stage-title,#labelstage").hide(800);
+                    $(".stagiere-body,.stagiere-body-two,.Stage-title,#labelstage").hide(800);
+                    $(".form-actions button").attr('name','_interim');
                     $('this option[value=interim]').prop('selected', true);
                     $('this option[value=stage]').prop('selected', false);
                 }else if($(this).val()==='stage'){
                     $('html, body').animate({ scrollTop: 200 }, 500);
-                    $(".stagiere-body,.Stage-title,#labelstage").show(800);
+                    $(".stagiere-body,.stagiere-body-two,.Stage-title,#labelstage").show(800);
                     $(".Interim-body,.Interim-title,#labelinterm").hide(800);
-                    $("#add_extern_workflow_contract_type").val(20);
+                    $(".form-actions button").attr('name','_stage');
                     $('this option[value=stage]').prop('selected', true);
                     $('this option[value=interim]').prop('selected', false);
                 };
