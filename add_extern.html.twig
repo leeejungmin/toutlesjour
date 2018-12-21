@@ -1,0 +1,100 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'action.add_extern'|trans }}{% endblock %}
+
+{% block pageContent %}
+    <div class="portlet">
+        <div class="portlet-body form">
+            {{ form_start(form) }}
+            {{ form_row(form.choiceoption) }}
+            <hr/>
+            <div class="form-body">
+                <h3 class="form-section">{{ 'form.label.civilstatus'|trans }}</h3>
+                {{ form_row(form.people.civility) }}
+                {{ form_row(form.people.lastName) }}
+                {{ form_row(form.people.firstName) }}
+                {{ form_row(form.people.socialSecurity) }}
+                <div class="stagiere-body">
+                    {{ form_row(form.people.bankIban, {'value' : setbankIban}) }}
+                    {{ form_widget(form.payslip, {'value' : setpayslip}) }}
+                </div>
+                {{ form_row(form.people.birthdate) }}
+                {{ form_row(form.people.birthCity) }}
+                {{ form_row(form.people.birthDistrict) }}
+                {{ form_row(form.people.addressLine1) }}
+                {{ form_row(form.people.addressLine2) }}
+                {{ form_row(form.people.addressCity) }}
+                {{ form_row(form.people.addressZipcode) }}
+                {{ form_row(form.people.addressCountry) }}
+                <h3 class="form-section">{{ 'Contract'|trans }}</h3>
+                <div class="Interim-body">
+                    {{ form_row(form.contract.establishment) }}
+                    {{ form_row(form.contract.typeReason, {'value' : setTypeReason|number_format})}}
+                    {{ form_row(form.contract.interimAgency) }}
+                </div>
+                {{ form_row(form.contract.startDate) }}
+                {{ form_row(form.contract.endDate) }}
+                <div class="stagiere-body-two">
+                    {{ form_row(form.contract.universityName) }}
+                    {{ form_row(form.contract.tutorName) }}
+                </div>
+            </div>
+            <div class="form-actions">
+                <a class="btn btn-default" href="{{ path('app_company_employee_index', { 'company' : company.id })}}"> {{ 'action.cancel'|trans }}</a>
+                <button class="btn btn-primary" type="submit" value="create" name="">{{ "action.add_extern"|trans }}</button>
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+{% endblock %}
+{% block pagescript %}
+    <script>
+        jQuery(document).ready(function() {
+            Digipay.init();
+
+            $(".stagiere-body,.Stage-title,#labelstage,.stagiere-body-two").hide();
+
+            $('#add_extern_workflow_people_bankIban, #add_extern_workflow_payslip_baseWage').removeAttr('required');
+            if(localStorage.getItem('checkTypeExtern') === undefined){
+                $('#add_extern_workflow_people_bankIban').val('FR76 0000 0000 0000 0000 0000 000');
+                $('#add_extern_workflow_payslip_baseWage').val(0);
+            }
+            //  $('#add_extern_workflow_people_bankIban').val('FR76 1010 7003 4000 0324 0198 281');
+            if(localStorage.getItem('checkTypeExtern') === 'stage'){
+                $(".stagiere-body,.stagiere-body-two,.Stage-title,#labelstage,.stagiere-body-two").show(800);
+                $(".Interim-body,.Interim-title,#labelinterm").hide(800);
+                $(".form-actions button").attr('name','_stage');
+                $('this option[value=stage]').prop('selected', true);
+                $('this option[value=interim]').prop('selected', false);
+                $('#add_extern_workflow_people_bankIban, #add_extern_workflow_payslip_baseWage').prop('required',true);
+
+            }
+              $("#add_extern_workflow_choiceoption").change(function() {
+
+                  if($(this).val()==='interim' ){
+                      localStorage.setItem('checkTypeExtern', 'interim');
+                      $('html, body').animate({ scrollTop: 200 }, 500);
+                      $(".Interim-body,.Interim-title,#labelinterm").show(800);
+                      $(".stagiere-body,.stagiere-body-two,.Stage-title,#labelstage,.stagiere-body-two").hide(800);
+                      $(".form-actions button").attr('name','_interim');
+                      $('this option[value=interim]').prop('selected', true);
+                      $('this option[value=stage]').prop('selected', false);
+
+                      $('#add_extern_workflow_people_bankIban, #add_extern_workflow_payslip_baseWage').removeAttr('required');
+                      $('#add_extern_workflow_people_bankIban, #add_extern_workflow_payslip_baseWage').val(null);
+                  }else if($(this).val()==='stage'){
+                      localStorage.setItem('checkTypeExtern', 'stage');
+                      $('html, body').animate({ scrollTop: 200 }, 500);
+                      $(".stagiere-body,.stagiere-body-two,.Stage-title,#labelstage,.stagiere-body-two").show(800);
+                      $(".Interim-body,.Interim-title,#labelinterm").hide(800);
+                      $(".form-actions button").attr('name','_stage');
+                      $('this option[value=stage]').prop('selected', true);
+                      $('this option[value=interim]').prop('selected', false);
+                      $('#add_extern_workflow_people_bankIban, #add_extern_workflow_payslip_baseWage').prop('required',true);
+                  };
+              })
+          });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,5 @@
+
+this is for floating div
+
+
+<div style="overflow: hidden;" > <div style="font-weight: bold ;float: left">
