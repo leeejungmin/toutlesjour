@@ -1,5 +1,10 @@
 <script>
 data.filters = {};
+var getUrl = window.location;
+var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+
+
+
                    //Retrieve Filters
                    $('select.form-filter, input.form-filter', $('#'+ settings.sTableId).parents(".table-container")).each(function() {
                       if($(this).parent('.dataTables_sizing').length == 0) { //On évite les filtres qui sont dans le sizing...
@@ -44,31 +49,11 @@ data.filters = {};
                        return html;
                    }},
                */
+
+
+
+
                    {% for col in tableSettings.columns %}
-                       {% if col.render_type is defined and col.render_type == "tick" %}
-                           {
-                           "data" : "{{ col.filter_name }}",
-                           "render": function ( data, type, row ) {
-                               if (type == "display") {
-                                   var isTrue = row.{{ col.filter_name }} == 1;
-                                   return '<i class="fa fa-'+ (isTrue ? 'check' : 'times') +' font-'+ (isTrue ? 'green' : 'red') +'"></i>';
-                               } else {
-                                   return  row.{{ col.filter_name }};
-                               }
-                           }},
-                       {% elseif col.render_type is defined and col.render_type == "input" %}
-                           {
-                           "data" : "{{ col.filter_name }}",
-                           "render": function ( data, type, row ) {
-                               if (type == "display") {
-                                   var html = '<input class="form-control {{ col.input_class }}" type="text" data-id="'+ row.id +'" data-target-id="'+ ((row.target_id == null) ? "" : row.target_id) +'" value="'+ ((row.amount == null) ? "" : row.amount) +'">';
-                                   //html = '<div class="input-group">' + html + '<span class="input-group-addon"> €</span></div>';
-                                   html = '<div class="input-group">' + html + '</div>';
-                                   return html;
-                               } else {
-                                   return  row.amount;
-                               }
-                           }},
                        {% elseif col.render_type is defined and col.render_type == "checkbox" %}
                            {
                            "data" : "{{ col.filter_name }}",
@@ -97,6 +82,7 @@ data.filters = {};
                                            var linkPrefix = str.substring(0, tempstringPos);
                                            //if(linkPrefix!=""){
                                                tempSalaryLink = linkPrefix+'/{{ col.link }}/employee/'+row.id;
+
                                                var html = '<a href="'+linkPrefix+'/{{ col.link }}/employee/'+row.id+'"><img style="width: 45px; height: 45px;" src="'+ row.{{ col.filter_name }}[0].url +'"></a>';
                                            //}else{
                                            //    var html = '<a href="#"><img style="width: 45px; height: 45px;" src="'+ row.{{ col.filter_name }}[0].url +'"></a>';
@@ -161,210 +147,17 @@ data.filters = {};
                                    return  row.{{ col.filter_name }};
                                }
                            }},
-                       {% elseif col.render_type is defined and col.render_type == "day" %}
-                           {"orderable": false,
-                           "searchable": false,
-                           "className": 'event-box',
-                           "data": function ( row, type, set ) {
-                               var data = {};
-                               data['employee'] = row.id;
-                               var day = moment("{{col.render_day}}", "YYYY-MM-DD");
-                               data['day'] = day;
-                               data['hour'] = false;
-                               data['day_off'] = false;
 
-                               //Check Hours and Schedule
-                               if (row.schedule) {
-                                   var day_schedule = row.schedule[day.isoWeekday()];
-                                   //Set flag to determine if user has worked
-                                   var hasHour = false;
-                                   {% if not tableSettings.hideHours is defined or not tableSettings.hideHours %}
-                                   if (row.hours) {
-                                       for (var i = 0; i < row.hours.length; i++) {
-                                           var sd = moment(row.hours[i].startDate);
-                                           if (sd.year() == day.year() && sd.dayOfYear() == day.dayOfYear()) {
-                                               data['hour'] = row.hours[i];
-                                           }
-                                       }
-                                   }
-                                   {% endif %}
-                                   //No hours, check if day is off
-                                   if (day_schedule.working_days == 0 && !data['hour']) {
-                                       data['day_off'] = true;
-                                   }
-                               }
 
-                               var addEventData = function (events, eventType, data) {
-                                   for (var i = 0; i < events.length; i++) {
-                                       var ev = events[i];
-                                       var sd = moment(ev.startDate);
-                                       var ed = moment(ev.endDate);
 
-                                       if (day.isSame(sd, 'day') || day.isSame(ed, 'day') || day.isBetween(sd, ed, 'day')) {
-                                           if (!data.hasOwnProperty(eventType)) {
-                                               data[eventType] = {};
-                                           }
-                                           data[eventType][ev.id] = ev;
-                                       }
-                                   }
 
-                                   return data;
-                               };
 
-                               //Check Events
-                               if (row.events) {
-                                   data = addEventData(row.events, 'employee-event', data);
-                               }
 
-                               if (row.company_events) {
-                                   data = addEventData(row.company_events, 'company-event', data);
-                               }
 
-                               return data;
-                           },
-                           "render": function ( data, type, row, meta ) {
-                               //var api = grid.getDataTable();
-                               //var $cell = $(api.cell(meta.row, meta.col).node());
-                               //$cell.addClass('event-day-cell');
 
-                               var day = data['day'];
-                               var content = '';
 
-                               //Check Hours and Schedule
-                               if (row.schedule) {
-                                   var day_schedule = row.schedule[day.isoWeekday()];
-                                   //Set flag to determine if user has worked
-                                   {% if not tableSettings.hideHours is defined or not tableSettings.hideHours %}
-                                   if (data['hour']) {
-                                       $span = $('<span>').addClass('event-hour');
-                                       $span.html(DigipayUtils.convertHToTime(data['hour'].hours) + ' / ' + DigipayUtils.convertHToTime(day_schedule.working_hours));
-                                       content += $span.prop('outerHTML');
-                                   }
-                                   {% endif %}
-                               }
 
-                               var getEventCellContent = function (events, eventType) {
-                                   var html = '';
-                                   for (var evId in events) {
-                                       var ev = events[evId];
-                                       var sd = moment(ev.startDate);
-                                       var ed = moment(ev.endDate);
 
-                                       if (day.isSame(sd, 'day') || day.isSame(ed, 'day') || day.isBetween(sd, ed, 'day')) {
-                                           $span = $('<span>').addClass('event-day');
-                                           if(day.isSame(sd, 'day') && ev.startPM) {
-                                               $span.addClass('event-halfday-right');
-                                           }
-
-                                           if(day.isSame(ed, 'day') && ev.endAM) {
-                                               $span.addClass('event-halfday-left');
-                                           }
-
-                                           if(ev.status === 0) {
-                                               $span.addClass('event-not-validated');
-                                           }
-                                           $span.addClass(eventType);
-                                           $span.addClass('event-' + ev.code);
-                                           $span.attr('data-event-id', ev.id);
-                                           $span.attr('data-event-type', eventType);
-                                           html = $span.prop('outerHTML') + html;
-                                       }
-                                   }
-
-                                   return html;
-                               };
-
-                               //Check Company Events
-                               if (data['company-event']) {
-                                   content += getEventCellContent(data['company-event'],'company-event');
-                               }
-                               //Check Events
-                               if (data['employee-event']) {
-                                   content += getEventCellContent(data['employee-event'],'employee-event');
-                               }
-
-                               //No hours, check if day is off
-                               if (content == '' && data['day_off']) {
-                                   $span = $('<span>').addClass('event-day day-off');
-                                   content += $span.prop('outerHTML');
-                               }
-
-                               return content;
-                           }},
-                       {% elseif col.render_type is defined and col.render_type == "total_variable" %}
-                           {"orderable": false,
-                           "searchable": false,
-                           "data": function ( row, type, set ) {
-                               var $span = $('<span>');
-                               //$span.addClass('variable-item variable-euro');
-                               $span.addClass('variable-item');
-                               var total = 0.00;
-                               if (row.variables) {
-                                   for (var code in row.variables) {
-                                       if (row.variables[code].amount !== null)
-                                           total += parseFloat(row.variables[code].amount);
-                                   }
-                               }
-                               total = DigipayUtils.moneyNumber(total);
-                               $span.html(total);
-
-                               return $span.prop('outerHTML');
-                           }
-                           },
-                       {% elseif col.render_type is defined and col.render_type == "variable" %}
-                           {"orderable": false,
-                           "searchable": false,
-                           "data": function ( row, type, set ) {
-                               var code = '{{ col.render_param.variable }}';
-                               if (code in row.variables) {
-                                   return row.variables[code];
-                               }
-
-                               return null;
-                           },
-                           "render": function ( data, type, row ) {
-                               var content;
-                               var code = '{{ col.render_param.variable }}';
-                               var locked = '{{ col.render_param.locked }}';
-                               var $span = $('<span>');
-                               $span.addClass('variable-item');
-
-                               if (code in row.variables) {
-                                   var value = row.variables[code].amount;
-
-                                   //Specific condition for the comment !
-                                   if(row.variables[code].code==99999){
-                                       value = value;
-                                   }else{
-                                       //value = DigipayUtils.moneyNumber(value);
-                                       value = value;
-                                   }
-
-                                   if(locked) {
-                                       $span.addClass('variable-locked');
-                                       if (value !== null) {
-                                           value = '<i class="fa fa-lock"></i> ' + value;
-                                       }
-                                   }
-                                   else {
-                                       $span.addClass('variable-editable');
-                                       if (value !== null) {
-                                           //$span.addClass('variable-euro');
-                                       }
-                                   }
-                                   $span.html(value);
-                               }
-                               else {
-                                   $span.addClass('variable-off');
-                               }
-                               content = $span.prop('outerHTML');
-
-                               return content;
-                           }},
-                       {% else %}
-                           {"data": "{{ col.filter_name }}"},
-                       {% endif %}
-                   {% endfor %}
 
                    {% if not tableSettings.hideAction is defined or not tableSettings.hideAction %}
                    {"render": function ( data, type, row ) {

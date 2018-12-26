@@ -1,0 +1,353 @@
+{% extends "::app-layout.html.twig" %}
+
+{# {'label': 'Serial', 'width': '10%', 'filter_type': 'text', 'filter_name': 'serial','render_type': 'seriallink','link': company.id}, #}
+{% set tableSettings = {
+    'ajaxUrl' : path('app_company_employee_datatable', {'company': company.id}),
+    'tableId' : 'employee_data',
+    'filters' :[
+        {'label': 'Filtrer par Départment', 'filter_type': 'select', 'filter_name': 'department', 'choices':form.department.vars.choices },
+        {'label': 'Filtrer par Service', 'filter_type': 'select', 'filter_name': 'service', 'choices':form.service.vars.choices },
+        {'label': 'Filtrer par Unit', 'filter_type': 'select', 'filter_name': 'unit', 'choices':form.unit.vars.choices },
+    ],
+    'columns' : [
+        {'label': 'Avatar', 'width': '10%', 'filter_name': 'avatar', 'render_type': 'image', 'link': company.id},
+        {'label': 'Employee', 'width': '20%', 'filter_type': 'text', 'filter_name': 'name','render_type':'employenamelink','link':company.id},
+        {'label': 'Establishment', 'width': '10%', 'filter_type': 'text', 'filter_name': 'establishment'},
+        {'label': 'Department', 'width': '10%', 'filter_type': 'text', 'filter_name': 'department'},
+        {'label': 'Service', 'width': '10%', 'filter_type': 'text', 'filter_name': 'service'},
+        {'label': 'Unit', 'width': '10%', 'filter_type': 'text', 'filter_name': 'unit'},
+        {'label': 'Has Contract', 'width': '10%', 'filter_type': 'boolean',  'render_type': 'tick', 'filter_name': 'active', 'filter_value': '1'},
+    ],
+    'hideAction' : false,
+}
+%}
+
+{% import 'AppBundle:Component:datatable.html.twig' as datatable %}
+
+{% block title %}{{ "Employees"|trans }}{% endblock %}
+
+{% block pageContent %}
+    <span id="existingAvatar" class="display-none" ></span>
+    <div id="show_hide_filter" >
+        <button id="show_hide_filter_button" type="button" class="btn btn-default btn-sm">{{ 'hide_filter'|trans }}</button>
+    </div>
+    <div id="imports_result_show_result_btn_container">
+        <button id="imports_result_show_details" type="button" class="btn btn-danger pull-right">{{ "button.show.value.show.all.details"|trans }}</button>
+    </div>
+
+    {% if importResultsLog is defined and importResultsLog is not empty  %}
+        <div id="imports_result_container">
+            {% if importResultsLog.koLogs is defined and importResultsLog.koLogs is not empty %}
+                <div class="show_error">
+                    {% for law in importResultsLog.koLogs %}
+                        <div class="row_element">{{ law }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if importResultsLog.okLogs is defined and importResultsLog.okLogs is not empty %}
+                <div class="show_insert">
+                    {% for law in importResultsLog.okLogs %}
+                        <div class="row_element">{{ law }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+    <div class="padding-bottom-10px">
+        <button name="" id="employee_modal_import_action" class="btn btn-primary pull-right" data-target="#ImportEmployees" data-toggle="modal" >{{ 'action.import.employee.btn'|trans }}</button>
+        <button name="" id="employee_modal_export_action" class="btn btn-primary pull-right" data-target="#ExportEmployees" data-toggle="modal" >{{ 'action.btn.export.excel'|trans }}</button>
+    </div>
+        {# adding date picker for the export action #}
+        {#<span>{{ 'action.export.period'|trans }}</span>
+          <input id ="datepicker" type="text" value="">
+          <button id="datepickerIcon" class="btn default date-set" type="button"><i class="fa fa-calendar"></i></button>
+        end #}
+    <div class="form-actions">
+        <div class="modal" id="ImportEmployees" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button class="close" data-dismiss="modal">$times;</button>
+                        <h4 class="modal-title">
+                            <ul id="employees_import_navtabs" class="nav nav-tabs">
+                                <li class="active"><a data-toggle="tab" href="#employees_import">Import Employe</a></li>
+                                <li><a data-toggle="tab" href="#employees_import_guide">Guide</a></li>
+                            </ul>
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tab-content">
+                            <div id="employees_import" class="tab-pane fade in active">
+                                {{ form_start(importEmployees)  }}
+                                {{ form_errors(form) }}
+                                <div class="form-group">
+                                    {{ form_label(importEmployees.file) }}
+                                    {{ form_widget(importEmployees.file) }}
+                                </div>
+                                <div class="modal-footer">
+                                    {{ form_widget(importEmployees.Save)}}
+                                </div>
+                            </div>
+                            {{ form_end(importEmployees) }}
+                            <div id="employees_import_guide" class="tab-pane fade">
+                                <div class="first-container">
+                                    <div class="first-container-left">
+                                        <h4>Type de fichiers:</h4>
+                                        <ul>
+                                            <li>CSV</li>
+                                            <li>XLS</li>
+                                            <li>XLSX</li>
+                                        </ul>
+                                    </div>
+                                    <div class="first-container-right">
+                                        <h4>Champs (structure) du fichier :</h4>
+                                        <ol>
+                                            <div class="champs-left">
+                                                <li>Pays d'adresse</li>
+                                                <li>Pays de la banque</li>
+                                                <li>Nationalité</li>
+                                                <li>Civilité</li>
+                                                <li>Nom de famille</li>
+                                                <li>Prénom</li>
+                                                <li>Nom de jeune fille</li>
+                                                <li>E-mail</li>
+                                                <li>Téléphone personnel</li>
+                                                <li>Date de naissance</li>
+                                                <li>Quartier de naissance</li>
+                                                <li>Ville de naissance</li>
+                                                <li>Etat civil</li>
+                                            </div>
+                                            <div class=champs-right>
+                                                <li>N° de sécurité sociale</li>
+                                                <li>Adresse 1</li>
+                                                <li>Adresse 2</li>
+                                                <li>Ville d'adresse</li>
+                                                <li>Code postal</li>
+                                                <li>Titre du compte Bancaire</li>
+                                                <li>Nom de banque</li>
+                                                <li>BIC</li>
+                                                <li>IBAN</li>
+                                                <li>Modèle de bordereau de paiement</li>
+                                                <li>Modèle d'horaire</li>
+                                                <li>Soins de santé</li>
+                                                <li>Etape d'embarquement</li>
+                                            </div>
+
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                <div class="second-container">
+                                    <h4>Contenu des champs :</h4>
+                                    <ul>
+                                        <li class="blue-color">Civiilité :</li>
+                                        <ul class="btm-pddg-1p">
+                                            <li>Civilité valide {m, mlle, mme}</li>
+                                        </ul>
+                                        <li class="blue-color">Etat civil :</li>
+                                        <ul class="btm-pddg-1p">
+                                            <li>{célibataire, marié, voeuf, divorcé, séparé, radion conjugale, pacs, inconnu}</li>
+                                        </ul>
+                                        <li class="blue-color">Numéro de sécurité sociale :</li>
+                                        <ul class="btm-pddg-1p">
+                                            <li>Doit être composé uniquement de 15 chiffres.</li>
+                                        </ul>
+                                        <li class="blue-color">Modèle de bordereau de paye:</li>
+                                        <div class="paySlipModeleScroll">
+                                            {% for data in getPaySlipModele %}
+                                                <ul>
+                                                    <li>
+                                                        <div class="imports_guide_fwidth">{{ data.code }} </div>=> {{ data.title }}
+                                                    </li>
+                                                </ul>
+                                            {% endfor %}
+                                        </div>
+                                        <li class="blue-color">Modèle d'horaire:</li>
+                                        <div class="ScheduleModeleScroll">
+                                            {% for data in getScheduleModele %}
+                                                <ul>
+                                                    <li>
+                                                        <div class="imports_guide_fwidth">{{ data.code }} </div>=> {{ data.title }}
+                                                    </li>
+                                                </ul>
+                                            {% endfor %}
+                                        </div>
+                                        <li class="blue-color">Soins de santé:</li>
+                                        <ul class="btm-pddg-1p">
+                                            <li>{aucune, employe isolé, employe couple, employe famille, cadre isolé, cadre couple, cadre famille}</li>
+                                        </ul>
+                                        <li class="blue-color">Etat d'embarqument de santé:</li>
+                                        <ul class="btm-pddg-1p">
+                                            <li>la valeur doit être numérique</li>
+                                        </ul>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal" id="ExportEmployees" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button class="close" data-dismiss="modal">$times;</button>
+                        <h4 class="modal-title">
+                            <ul id="employees_export_navtabs" class="nav nav-tabs">
+                                <li class="active"><a data-toggle="tab" href="#employees_export">Exports des employés</a></li>
+                            </ul>
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tab-content">
+                            <div id="employees_export" class="tab-pane fade in active">
+                                <div class="form-group">
+                                    <form id="actual_value_of_list" action="{{ path('app_company_employee_export', {"company": company.id}) }}" method="POST" target="_blank">
+                                        {#radio boxes#}
+                                        <span id ="lengend_title">{{ 'available.export.excel'|trans }}</span>
+                                        <div class="radio">
+                                            <label><input type="radio" name="optradio" id="all_salarial" checked>{{ 'total.export.excel'|trans }}</label>
+                                        </div>
+                                        <div class="radio">
+                                            <label><input type="radio" name="optradio" id="active_month">{{ 'actif.export.excel'|trans }}</label>
+                                        </div>
+                                        {#<div class="radio">
+                                            <label><input type="radio" name="optradio" value="custom_field">{{ 'specific.export.excel'|trans }}</label>
+                                        </div>#}
+                                        {# END #}
+                                        {#<a id="exb" href="{{ path('app_company_employee_export', {"company": company.id}) }}" target="_blank" class="btn btn-primary pull-left">{{ 'action.btn.export.csv'|trans }}</a>#}
+                                        <!--hidden fields date start and date end for export usend to send data to controller when form is submitted-->
+                                        <input type="hidden" id="element_content_start" name="export_date_selection_start" value="null"/>
+                                        <input type="hidden" id="element_content_end" name="export_date_selection_end" value="null"/>
+                                        <input type="hidden" id="element_flag" name="element_flag" value="null"/>
+                                        <div class="col-sm-5" id="period_field_picker">{# adding date picker for the export action #}
+                                            <span>{{ 'start.date'|trans }}</span>
+                                            <div class="input-group date date-picker" ><input id="datepicker_start" autocomplete="off" data-date-format="yyyy-mm-dd" name="all_event[startDate]" required="required" class="datepicker-user-front form-control" value="" type="text">
+                                                <span class="input-group-btn"><button class="btn default date-set"  type="button"><i class="fa fa-calendar"></i></button></span>
+                                            </div>
+                                            <span>{{ 'end.date'|trans }}</span>
+                                            <div class="input-group date date-picker" ><input id="datepicker_end" autocomplete="off" data-date-format="yyyy-mm-dd" name="all_event[startDate]" required="required" class="datepicker-user-front form-control" value="" type="text">
+                                                <span class="input-group-btn"><button class="btn default date-set" type="button"><i class="fa fa-calendar"></i></button></span>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <!--New export Action href-->
+                                    <a type="button" id="export_employees" class='btn btn-primary pull-right'><i class="fa fa-file-excel-o" aria-hidden="true"></i> {{ 'action.btn.export.excel'|trans }}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ datatable.renderHtml(tableSettings) }}
+{% endblock %}
+
+{% block pagescript %}
+    {{ datatable.renderJs(tableSettings) }}
+    {{ parent() }}
+    <script>
+        jQuery(document).ready(function() {
+            if(localStorage.getItem('planningShowHideFiltersFlag')!= undefined){
+                if(localStorage.getItem('planningShowHideFiltersFlag') =="yes"){
+                    $('.table-container .table-filter-wrapper ').hide(800);
+                    $('#show_hide_filter_button').html('{{'show_filter'|trans }}');
+                }
+            }
+
+            //Show and hide Filters
+            $('#show_hide_filter_button').click(function(){
+                if($('.table-filter-wrapper').is(":visible") === true){
+                    localStorage.setItem('planningShowHideFiltersFlag', 'yes');
+                    $('#show_hide_filter_button').html('{{'show_filter'|trans }}');
+                }else{
+                    localStorage.setItem('planningShowHideFiltersFlag', '');
+                    $('#show_hide_filter_button').html('{{'hide_filter'|trans }}');
+                }
+                $('.table-container .table-filter-wrapper ').toggle(800);
+            });
+
+            {% if importResultsLog is defined and importResultsLog is not empty  %}
+            $("#imports_result_show_result_btn_container").show("slow");
+            {% endif %}
+
+            $("#imports_result_show_details").click(function() {
+                if($("#imports_result_container").css('display')=="none"){
+                    $("#imports_result_container").show("slow");
+                    $("#imports_result_show_details").text('{{ "button.show.value.hide.all.details"|trans }}');
+                }else{
+                    $("#imports_result_container").hide("slow");
+                    $("#imports_result_show_details").text('{{ "button.show.value.show.all.details"|trans }}');
+                }
+            });
+
+            //if($('#custom_field').is(':checked')){
+            //}
+
+            //storing date export in the hidden value
+            $('#datepicker_start').datepicker().on("input change", function (e) {
+                //la date selectionné apartir de date picker
+                    var content_start_date = e.target.value;
+                    document.getElementById('element_content_start').value = content_start_date;
+                });
+            $('#datepicker_end').datepicker().on("input change", function (e) {
+                    //la date selectionné apartir de date picker
+                    var content_end_date = e.target.value;
+                    document.getElementById('element_content_end').value = content_end_date;
+            });
+            //Action to submit the form containing the export date value
+            $( "#export_employees" ).click(function() {
+                document.getElementById("actual_value_of_list").submit();
+            });
+            //hidinding and showing date fiels when radio box is shecked
+            if (jQuery('input[value=custom_field]:checked').length > 0){
+                jQuery('#period_field_picker').show()
+            }
+            else {
+                jQuery('#period_field_picker').hide();
+            }
+            $('input[name=optradio]').change(function() {
+                var selected = jQuery(this).val();
+                if(selected == 'custom_field'){
+                    document.getElementById('element_flag').value = "1";
+                    document.getElementById('datepicker_start').value = "";
+                    document.getElementById('datepicker_end').value = "";
+                    jQuery('#period_field_picker').show();
+                } else {
+                    jQuery('#period_field_picker').hide();
+                }
+            });
+            $('input[id="all_salarial"]').on('change', function(){
+                document.getElementById('element_flag').value = "null";
+                document.getElementById('element_content_start').value = "null";
+                document.getElementById('element_content_end').value = "null";
+            });
+            //injectin the first day and the last day of the actual month
+            $('input[id="active_month"]').on('change', function(){
+                document.getElementById('element_flag').value = "null";
+                var first_day = new Date();
+                var dd = first_day.getDate();
+                var mm = first_day.getMonth()+1; //January is 0!
+
+                var yyyy = first_day.getFullYear();
+                if(dd < 10){
+                    dd='0'+dd;
+                }
+                if(mm < 10){
+                    mm="0"+mm;
+                }
+                first_day = yyyy+'-'+mm+'-'+'01';
+                var date = new Date();
+                var format_last_day = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                var last_day = format_last_day.getFullYear() + '-' + ("0" + (format_last_day.getMonth() + 1)).slice(-2) + '-' + (format_last_day.getDate());
+                document.getElementById('element_content_start').value = first_day;
+                document.getElementById('element_content_end').value = last_day ;
+            });
+        });
+    </script>
+{% endblock %}
