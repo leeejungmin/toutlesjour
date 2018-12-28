@@ -1,0 +1,56 @@
+
+{% embed "AppBundle:Component:table.html.twig" %}
+    {% block title %}{{ title|default('Contracts')|trans }}{% endblock %}
+    {% block thead %}
+        <tr>
+            <th> {{ 'Type'|trans }} </th>
+            <th> {{ 'Start date'|trans }} </th>
+            <th> {{ 'Trial period end date'|trans }} </th>
+            <th> {{ 'End date'|trans }} </th>
+            <th> {{ 'Document'|trans }}</th>
+            <th> {{ 'Action'|trans }}</th>
+        </tr>
+    {% endblock %}
+    {% block tbody %}
+
+        {% for contract in contracts %}
+            <tr>
+                <td>
+                    <p>{{ contract.type.title }}</p>
+                    {% if contract.type.code == "CSU" %}
+                        <div class="company_employee_table" > <div class="table_title">{{ 'title.name.ecole'|trans }} :</div> {{ contract.universityName }}</div>
+                        <div class="company_employee_table" > <div class="table_title">{{ 'title.name.tuteur'|trans }} :</div>{{ contract.tutorName }}</div>
+                    {% elseif contract.type.code == "INT" %}
+                        <div class="company_employee_table" > <div class="table_title">{{ 'title.name.interimAgency'|trans }} :</div>{{ contract.interimAgency }}</div>
+                    {% endif %}
+                </td>
+                <td> {{ contract.startDate|intl_date('d MMMM y') }} </td>
+                <td> {% if contract.trialPeriodEndDate %}{{ contract.trialPeriodEndDate|intl_date('d MMMM y') }}{% endif %} </td>
+                <td> {% if contract.endDate %}{{ contract.endDate|intl_date('d MMMM y') }}{% endif %}
+                    {# TODO: Validator #}
+                </td>
+                <td>
+                    {{ include('AppBundle:Company/Employee/File:btn.html.twig', { 'file' : contract.file }) }}
+                </td>
+                <td>
+                    {% if loop.first %}
+                        {% if is_granted('ROLE_PAY_ADMIN') or is_granted('DIGIPAYE_EMPLOYEE_MANAGE', employee) %}
+                            {# TODO: give access to users once its fully validated #}
+                            <a class="btn btn-default" href="{{ path('app_company_workflow_contract_fix', { 'company': company.id, 'employee' : employee.id }) }}">{{ 'action.fix_contract'|trans }}</a>
+                        {% endif %}
+                        <a class="btn btn-default" href="{{ path('app_company_workflow_contract_updateend', { 'company': company.id, 'employee' : employee.id }) }}">{{ 'action.update_contract_end'|trans }}</a>
+                        <a class="btn btn-default" href="{{ path('app_company_workflow_contract_updatetrialperiod', { 'company': company.id, 'employee' : employee.id }) }}">{{ 'action.update_contract_trial_period'|trans }}</a>
+                        {% if contract.type.code == "CDD" %}
+                            <a class="btn btn-default" href="{{ path('app_company_workflow_contract_updatecddtocdi', { 'company': company.id, 'employee' : employee.id }) }}">{{ 'action.update_contract_cdd_to_cdi'|trans }}</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            <td></td>
+            <td colspan="5">
+                {% include('AppBundle:Company/Employee/Contract:summary.html.twig') %}
+            </td>
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}
