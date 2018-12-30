@@ -5,71 +5,79 @@
 {% endblock %}
 
 {% block pageContent %}
-     <h1 class="page-title"></h1>
-     <div class="row">
-    <div class="form-group">
-        <label for="sel1">Company</label>
-        <select class="form-control" onchange="location = this.value;" id="find_company_list">
-    {% for company in companys %}
-        {% set companyid = company.id %}
-            <option value="link1.html" >{{ company.name }}</option>
-    {% endfor %}
-        </select>
+    <h1 class="page-title"></h1>
+    <div class="row">
+        <div class="form-group">
+            <label for="sel1">Company</label>
+            <select class="form-control"  id="find_company_list">
+                {% for company in companys %}
+                    <option value={{ company.id }}>{{ company.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+
+
+        <button class="btn btn-primary" type="submit">
+            {{ 'action.saveform'|trans }}
+        </button>
+        <a id="btn_remove_variable" class="btn btn-danger" href="{{ path('app_backend_advancevariable_index') }}">
+            {{ 'action.cancel'|trans }}
+        </a>
     </div>
 
 
 
-         <button class="btn btn-primary" type="submit">
-             {{ 'action.saveform'|trans }}
-         </button>
-         <a id="btn_remove_variable" class="btn btn-danger" href="{{ path('app_backend_advancevariable_index') }}">
-             {{ 'action.cancel'|trans }}
-         </a>
-     </div>
+{% endblock %}
+    {% block pagescript %}
+        <script>
+            jQuery(document).ready(function() {
+                $( "#find_company_list" ).change(function () {
+                    var str = "";
+                    $( "select option:selected" ).val();
+                    console.log('hellojungmin!');
+                    console.log($( "select option:selected" ).val());
+                    var companyid = $( "select option:selected" ).val();
+                    {% set companyidforpass = "" %}
+                    var localadress = window.location.href;
+                    console.log(localadress);
+                    var url = localadress.substr(0, localadress.indexOf('closure'));
+                    var url = url+companyid+'/getClosures';
+                    console.log(url);
+                    //var url = "";
+                    //var url = localadress+'/app_dev.php/backend/advanced/1/getClosures';
+                   // console.log(url);
 
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        traditional: true,
+                        dataType: 'json',
+                        //data : data,
+                        success: function (res) {
+                        },
+                         /*done: function(data){
+                         },
+                         complete: function(data) {
+                             dataResponse = JSON.parse(data.responseText);
+                             if(dataResponse=="OK"){
+                                 location.reload();
+                             }else{
+                                 console.log(dataResponse);
+                                 if(dataResponse=='[{"headers":{}}]'){
+                                     document.getElementById('team_manager_create_modal_errors').innerHTML = "L'adresse mail existe déjà !";
+                                 }else{
+                                     document.getElementById('team_manager_create_modal_errors').innerHTML = dataResponse;
+                                 }
+                             }
+                         }
+                     });
+                 */
+                    });
 
-
-
-{% block pagescript %}
-    <script>
-        jQuery(document).ready(function() {
-          $( "#find_company_list" ).change(function () {
-    var str = "";
-    $( "select option:selected" ).val()
-            console.log('hellojungmin!');
-            console.log($( "select option:selected" ).val());
-            var companyid = $( "select option:selected" ).val();
-            var url = "{{ path('app_backend_advancevariable_companysearch' , { 'company' : companyid }) }}";
-            var url = "";
-            $.ajax({
-                url: url,
-                type: 'POST',
-                traditional: true,
-                dataType: 'json',
-                //data : data,
-                success: function (res) {
-                },
-               /* done: function(data){
-                },
-                complete: function(data) {
-                    dataResponse = JSON.parse(data.responseText);
-                    if(dataResponse=="OK"){
-                        location.reload();
-                    }else{
-                        console.log(dataResponse);
-                        if(dataResponse=='[{"headers":{}}]'){
-                            document.getElementById('team_manager_create_modal_errors').innerHTML = "L'adresse mail existe déjà !";
-                        }else{
-                            document.getElementById('team_manager_create_modal_errors').innerHTML = dataResponse;
-                        }
-                    }
-                }
+                });
+                Digipay.init();
             });
-        });*/
-        });
-        Digipay.init();
-        });
-
-    </script>
-{% endblock %}
-{% endblock %}
+        </script>
+    {% endblock %}
