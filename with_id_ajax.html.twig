@@ -1,0 +1,98 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'advanced.variable.btn.title'|trans }}
+
+{% endblock %}
+
+{% block pageContent %}
+    <h1 class="page-title"></h1>
+    <div class="row">
+        <div class="form-horizontal">
+        <div class="form-group">
+            <label class="col-sm-2" for="find_company_list">{{ 'advanced.company.title'|trans }} </label>
+            <div class="col-sm-10">
+                <select class="form-control"  id="find_company_list">
+                    {% for company in companys %}
+                        <option value={{ company.id }}>{{ company.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2" for="find_company">{{ 'advanced.variable.btn'|trans }} </label>
+            <div class="col-sm-10">
+                <select class="form-control"  id="find_closure"></select>
+            </div>
+        </div>
+        </div>
+
+        <div class="form-actions">
+            <a id="btn_go_status" class="btn btn-primary" href="">
+                {{ 'advanced.company.btn.check'|trans }}
+            </a>
+        </div>
+    </div>
+
+{% endblock %}
+    {% block pagescript %}
+        <script>
+            jQuery(document).ready(function() {
+                $( "#find_company_list" ).change(function () {
+                    var str = "";
+                    $( "select option:selected" ).val();
+                    //console.log('hellojungmin!');
+                    //console.log($( "select option:selected" ).val());
+                    var companyid = $( "select option:selected" ).text();
+                    var closureid = $( "select option:selected" ).val();
+                    {% set companyidforpass = "" %}
+                    var localadress = window.location.href;
+                   // console.log(localadress);
+                    var localaddress = localadress.substr(0, localadress.indexOf('closure'));
+                    var url = localaddress+companyid+'/getClosures';
+                    var urlforbutton = localaddress+companyid+"/status/"+closureid;
+                    $("#btn_go_status").attr("href",urlforbutton )
+                   // console.log(url);
+                    //var url = "";
+                    //var url = localadress+'/app_dev.php/backend/advanced/1/getClosures';
+                   // console.log(url);
+
+
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        traditional: true,
+                        dataType: 'json',
+                        //data : data,
+                        success: function (res) {
+                            console.log('this is success jungmin')
+                        },
+                        done: function(data){
+                        },
+                         complete: function(data) {
+                             dataResponse = JSON.parse(data.responseText);
+
+                             var selectid = document.getElementById('find_closure'), // get the select
+                                 createfragement = document.createDocumentFragment(),// create a document fragment to hold the options while we create them
+
+                                 numberofdataarray = dataResponse['data'].length;
+                             for (var i = 1; i <= numberofdataarray; i++) { // loop, i like 42.
+                                 var option = document.createElement('option'); // create the option element
+                                 option.value = dataResponse['id'][i]; // set the value property
+                                 option.appendChild(document.createTextNode(dataResponse['data'][i])); // set the textContent in a safe way.
+                                 createfragement.appendChild(option); // append the option to the document fragment
+                             }
+                                selectid.appendChild(createfragement);
+
+                                 console.log(dataResponse);
+                                 console.log('this is ok jungmin');
+                                 console.log(dataResponse['id']);
+                                 console.log(dataResponse['data'].length);
+                         }
+                    });
+
+                });
+                Digipay.init();
+            });
+        </script>
+    {% endblock %}

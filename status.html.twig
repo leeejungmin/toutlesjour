@@ -1,0 +1,44 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'advanced.variable.btn.title'|trans }}
+
+{% endblock %}
+
+{% block pageContent %}
+    <form class="row" action="{{ path('digipayuser_resetting_send_email') }}" method="POST">
+
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-2" for="company_list_status">{{ 'advanced.company.status'|trans }} </label>
+                <div class="col-sm-10">
+
+
+
+                    <select class="form-control"  id="company_list_status">
+                            <option value=0>{{ 'advanced.company.status.open'|trans }}</option>
+                            <option value=3>{{ 'advanced.company.status.close'|trans }}</option>
+                            <option value=1>{{ 'advanced.company.status.validated'|trans }}</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="form-actions">
+            <a id="btn_remove_variable" class="btn btn-primary" href="{{ path('app_backend_advancevariable_status') }}">
+                {{ 'advanced.company.btn.check'|trans }}
+            </a>
+
+            <button type="submit" class="btn btn-primary">{{ 'action.update_account'|trans }}</button>
+        </div>
+
+    </form>
+
+
+{% endblock %}
+    {% block pagescript %}
+        <script>
+                Digipay.init();
+        </script>
+    {% endblock %}
