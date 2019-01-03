@@ -1,0 +1,121 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'advanced.variable.btn.title'|trans }}
+
+{% endblock %}
+
+{% block pageContent %}
+    <h1 class="page-title"></h1>
+    <div class="row">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-2" for="find_company_list">{{ 'advanced.company.title'|trans }} </label>
+                <div class="col-sm-10">
+                    <select class="form-control"  id="find_company_list">
+                        {% for company in companys %}
+                            <option value={{ company.id }}>{{ company.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-2" for="find_company">{{ 'advanced.variable.btn'|trans }} </label>
+                <div class="col-sm-10">
+                    <select class="form-control"  id="find_closure"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a id="btn_go_status" class="btn btn-primary" href="">
+                {{ 'advanced.company.btn.check'|trans }}
+            </a>
+        </div>
+    </div>
+
+{% endblock %}
+    {% block pagescript %}
+        <script>
+            jQuery(document).ready(function() {
+                //for the default setting calling ajax of first company
+                var localadress = window.location.href;
+                var localaddress = localadress.substr(0, localadress.indexOf('closure'));
+                var companyid = $( "#find_company_list  option:selected" ).val();
+                var url = localaddress+companyid+'/getClosures';
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    traditional: true,
+                    dataType: 'json',
+                    success: function (res) {
+                    },
+                    done: function (data) {
+                    },
+                    complete: function (data) {
+                        dataResponse = JSON.parse(data.responseText);
+                        var selectid = document.getElementById('find_closure'),
+                            createfragement = document.createDocumentFragment(),
+                            numberofdataarray = dataResponse['data'].length;
+                        for (var i = 0; i < numberofdataarray; i++) {
+                            var option = document.createElement('option');
+                            option.value = dataResponse['id'][i];
+                            option.appendChild(document.createTextNode(dataResponse['data'][i]));
+                            createfragement.appendChild(option);
+                        }
+                        selectid.appendChild(createfragement);
+                        var companyid = $( "#find_company_list  option:selected" ).val();
+                        var closureid = dataResponse['id'][numberofdataarray-1];
+                        var urlforbutton = localaddress + companyid +"/status/" + closureid;
+                        $("#btn_go_status").attr("href", urlforbutton);
+                    }
+                });
+
+                $( "#find_company_list" ).change(function () {
+                    //delete for next append element
+                    var list = document.getElementById("find_closure");
+                    while (list.hasChildNodes()) {
+                        list.removeChild(list.firstChild);
+                    }
+                    var companyid = $( "#find_company_list  option:selected" ).val();
+                    var localadress = window.location.href;
+                    var localaddress = localadress.substr(0, localadress.indexOf('closure'));
+                    var url = localaddress+companyid+'/getClosures';
+
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        traditional: true,
+                        dataType: 'json',
+                        success: function (res) {
+                        },
+                        done: function(data){
+                        },
+                        complete: function(data) {
+                            dataResponse = JSON.parse(data.responseText);
+
+                            var selectid = document.getElementById('find_closure'),
+                                createfragement = document.createDocumentFragment(),
+                                numberofdataarray = dataResponse['data'].length;
+                            for (var i = 0; i < numberofdataarray; i++) {
+                                var option = document.createElement('option');
+                                option.value = dataResponse['id'][i];
+                                option.appendChild(document.createTextNode(dataResponse['data'][i]));
+                                createfragement.appendChild(option);
+                            }
+                            selectid.appendChild(createfragement);
+                            var closureid = $("#find_closure option:selected").val();
+                            var urlforbutton = localaddress+companyid+"/status/"+closureid;
+                            $("#btn_go_status").attr("href",urlforbutton );
+                            console.log(dataResponse);
+                            console.log(dataResponse['id']);
+                            console.log(dataResponse['data'].length);
+                        }
+                    });
+
+                });
+                Digipay.init();
+            });
+        </script>
+    {% endblock %}
