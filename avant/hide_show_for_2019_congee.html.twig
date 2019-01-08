@@ -1,0 +1,142 @@
+<h4 class="center-align">{{ title|trans }}</h4>
+
+{% set lastYear = false %}
+<button id="show_hide_button_newyear" type="button" class="btn btn-default btn-sm">{{ 'hide_filter'|trans }}</button>
+<tr>
+    {% set isyearover = '' %}
+    {% for event in events %}
+    {% if event.startDate|date('Y') > "now"|date("Y") - 1 or event.endDate|date('Y') > "now"|date("Y") - 1 %}
+    {% set isyearover = 'yes' %}
+    <div id = "isyearoverdiv" class = "isyearoverclass">
+        {% else %}
+        {% set isyearover = 'no' %}
+        <div id = "isyearoverdiv" class = "notyearoverclass">
+            {% endif %}
+            <div class="row">
+                <div class="col s12">
+                    <div class="card card-event">
+                        {# TODO: reduce padding for first card content for event #}
+                        <div class="card-content blue-grey darken-4">
+                    <span class="card-event-title">
+                        {# Set a Flag that save if we show the specific title else show the Global Event Title #}
+                        {% set specificEventTitleShow = false %}
+
+                        {# Change the Title View To the Specific Compny View #}
+                        {% if eventsReferencesByCompany is defined %}
+                            {% for eventShow in eventsReferencesByCompany %}
+                                {%  if event.type.id == eventShow.referenceEvent.id %}
+                                    {{ eventShow.title }}
+                                    {% set specificEventTitleShow = true %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {# This title must show when we don't find the Company Title
+                            The special case is when the Manage disable an Event and The Employee still have it ! #}
+                        {%  if specificEventTitleShow==false %}
+                            {{ event.type.title }}
+                        {% endif %}
+                    </span>
+                            {{ include("AppBundle:Company/Employee/Event:status.html.twig", {'event': event}) }}
+                        </div>
+                        <div class="card-content card-event-content">
+                            <div class="col s4">
+                                {{ event.startDate|date('d/m/Y') }}
+                                {% if event.startDate|date('H') == '12' %}
+                                    {{ 'form.event.noon'|trans }}
+                                {% else %}
+                                    {{ 'form.event.morning'|trans }}
+                                {% endif %}
+                            </div>
+                            <div class="col s4">
+                                {# TODO: correct  value according to calendar. May have to store the value in the entity to avoid computing it everytime #}
+                                <span class="event-days">
+                        {% set deltaH =  event.endDate|date('H') - event.startDate|date('H') %}
+                                    {% if event.endDate|date('d') == event.startDate|date('d') and (deltaH == 12 or deltaH == 11)  %}
+                                        0.5
+                                    {% else %}
+                                        {#Cas particulier quand un employee pose Xjour(s) et demi il faut enlever le "+1" #}
+                                        {% if deltaH == 12 or deltaH == 11 %}
+                                            {{ event.endDate|date('d') - event.startDate|date('d')}}{% if deltaH == 12 or deltaH == 11 %}.5{% endif %}
+                                        {% else %}
+                                            {% set difference = event.endDate.diff(event.startDate)%}
+                                            {% set leftDays = difference.days +1 %}
+                                            {{ leftDays }}{# 23 - 12 or 12 - 0 #}{% if deltaH == 12 or deltaH == 11 %}.5{% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                        </span>
+                            </div>
+                            <div class="col s4">
+                                {{ event.endDate|date('d/m/Y') }}
+                                {% if event.endDate|date('H') == '12' %}
+                                    {{ 'form.event.noon'|trans }}
+                                {% else %}
+                                    {{ 'form.event.evening'|trans }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if event.file %}
+                            <div class="card-content card-event-download">
+                                {# TODO: check how to add file download link #}
+                                <a class="waves-effect waves-light btn" href="{{ path('app_downloader_download', { 'file' : event.file.id }) }}">
+                                    {{ "action.download_proof"|trans }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if not loop.last %}
+            {# TODO: How to process years tags when changing years. Use startDate or endDate ? Using startDate for now #}
+            {% if not lastYear %}
+                {% set lastYear = event.startDate|date('Y') %}
+            {% elseif lastYear != event.startDate|date('Y') %}
+                {# TODO: Add year tag #}
+                <div class="row row-year">
+                    <div class="col s6 offset-s3 center-align">
+                        <div class="card">
+                            <div class="card-content">
+                                {{ lastYear }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% set lastYear = event.startDate|date('Y') %}
+            {% endif %}
+        {% endif %}
+        {% else %}
+            <div class="container center-align">
+                <div class="row">
+                    <i class="material-icons">do_not_disturb_alt</i>
+                </div>
+                {{ empty_text|default('help.no_events')|trans }}
+
+            </div>
+        {% endfor %}
+        {% block pagescript %}
+            <script src="/js/jquery.min.js" type="text/javascript"></script>
+            <script>
+                $(document).ready(function() {
+                    //Show and hide Filters
+                    if(localStorage.getItem('hid_show_session')!= undefined){
+                        if(localStorage.getItem('hid_show_session') =="yes"){
+                            $('.notyearoverclass').hide(800);
+                            $('#show_hide_button_newyear').html('{{'show_filter'|trans }}');
+                        }
+                    }
+
+                    //Show and hide Filters
+                    $('#show_hide_button_newyear').click(function(){
+                        if($('.notyearoverclass').is(":visible") === true){
+                            localStorage.setItem('hid_show_session', 'yes');
+                            $('#show_hide_button_newyear').html('{{'show_filter'|trans }}');
+                        }else{
+                            localStorage.setItem('hid_show_session', '');
+                            $('#show_hide_button_newyear').html('{{'hide_filter'|trans }}');
+                        }
+                        $('.notyearoverclass').toggle(800);
+                    });
+                });
+            </script>
+        {% endblock %}
