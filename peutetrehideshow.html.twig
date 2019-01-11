@@ -1,31 +1,33 @@
 <h4 class="center-align">{{ title|trans }}</h4>
 
 {% set lastYear = false %}
-<ul class="collapsible" id="newyearorganize">
-    <li>
-        <div id='2019header' class="collapsible-header"><i class="material-icons">filter_drama</i>First</div>
-        <div id='2019' class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+<ul id="events-collapsible-years-container" class="collapsible" id="newyearorganize">
+    <li class="collable-element">
+        <div id='2019header' class="collapsible-header active">2019</div>
+        <div id='2019body' class="collapsible-body"><span></span></div>
     </li>
-    <li>
-        <div id='2018header' class="collapsible-header"><i class="material-icons">place</i>Second</div>
-        <div id='2018body' class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+    <li class="collable-element">
+        <div id='2018header' class="collapsible-header">2018</div>
+        <div id='2018body' class="collapsible-body"><span></span></div>
     </li>
-    <li>
-        <div id='2017header' class="collapsible-header"><i class="material-icons">whatshot</i>Third</div>
-        <div id='2017body' class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+    <li class="collable-element">
+        <div id='2017header' class="collapsible-header">2017</div>
+        <div id='2017body' class="collapsible-body"><span></span></div>
     </li>
 </ul>
 
-
-<tr>
-    {% set isyearover = '' %}
+{% set isyearover = '' %}
     {% for event in events %}
-    {% if event.startDate|date('Y') > "now"|date("Y") - 1 or event.endDate|date('Y') > "now"|date("Y") - 1 %}
-    {% set isyearover = 'yes' %}
-    <div id = "isyearoverdiv" class = "isyearoverclass">
+    {% if event.startDate|date('Y') > "now"|date("Y") - 1 %}
+    {% set year =  "now"|date("Y") %}
+
+<div id = "distincyeardiv" class = "thisyear">
+    {% elseif event.startDate|date('Y') == "now"|date("Y") - 1 %}
+    {% set year =  "now"|date("Y") - 1  %}
+    <div id = "distincyeardiv" class = "beforeyear">
         {% else %}
-        {% set isyearover = 'no' %}
-        <div id = "isyearoverdiv" class = "notyearoverclass">
+        {% set year =  "now"|date("Y") - 2  %}
+        <div id = "distincyeardiv" class = "anotherbeforeyear">
             {% endif %}
             <div class="row">
                 <div class="col s12">
@@ -51,8 +53,10 @@
                         {%  if specificEventTitleShow==false %}
                             {{ event.type.title }}
                         {% endif %}
-                    </span>
-                            {{ include("AppBundle:Company/Employee/Event:status.html.twig", {'event': event}) }}
+                      </span>
+                            <div class="sortnewyearstatus">
+                                {{ include("AppBundle:Company/Employee/Event:status.html.twig", {'event': event}) }}
+                            </div>
                         </div>
                         <div class="card-content card-event-content">
                             <div class="col s4">
@@ -102,57 +106,19 @@
                 </div>
             </div>
         </div>
-        {% if not loop.last %}
-            {# TODO: How to process years tags when changing years. Use startDate or endDate ? Using startDate for now #}
-            {% if not lastYear %}
-                {% set lastYear = event.startDate|date('Y') %}
-            {% elseif lastYear != event.startDate|date('Y') %}
-                {# TODO: Add year tag #}
-                <div class="row row-year">
-                    <div class="col s6 offset-s3 center-align">
-                        <div class="card">
-                            <div class="card-content">
-                                {{ lastYear }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% set lastYear = event.startDate|date('Y') %}
-            {% endif %}
-        {% endif %}
-        {% else %}
-            <div class="container center-align">
-                <div class="row">
-                    <i class="material-icons">do_not_disturb_alt</i>
-                </div>
-                {{ empty_text|default('help.no_events')|trans }}
 
-            </div>
         {% endfor %}
         {% block pagescript %}
             <script src="/js/jquery.min.js" type="text/javascript"></script>
             <script>
                 $(document).ready(function() {
-                    //Show and hide Filters
-                    $('.notyearoverclass').hide();
-                    if(localStorage.getItem('hid_show_session')!= undefined){
-                        if(localStorage.getItem('hid_show_session') =="yes"){
-                            $('.notyearoverclass').hide(800);
-                            $('#show_hide_button_newyear').html('{{'show_events'|trans }}');
-                        }
-                    }
-
-                    //Show and hide Filters
-                    $('#show_hide_button_newyear').click(function(){
-                        if($('.notyearoverclass').is(":visible") === true){
-                            localStorage.setItem('hid_show_session', 'yes');
-                            $('#show_hide_button_newyear').html('{{'show_events'|trans }}');
-                        }else{
-                            localStorage.setItem('hid_show_session', '');
-                            $('#show_hide_button_newyear').html('{{'hide_events'|trans }}');
-                        }
-                        $('.notyearoverclass').toggle(800);
-                    });
+                    var thisyear = $('.thisyear');
+                    var beforeyear = $('.beforeyear');
+                    var anotherbeforeyear = $('.anotherbeforeyear');
+                    $('#2019body span').append(thisyear);
+                    $('#2018body span').append(beforeyear);
+                    $('#2017body span').append(anotherbeforeyear);
+                    $(".badge event-status").css("color", "white");
                 });
             </script>
         {% endblock %}

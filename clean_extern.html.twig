@@ -1,0 +1,107 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'action.add_extern'|trans }}{% endblock %}
+
+{% block pageContent %}
+    <div class="portlet">
+        <div class="portlet-body form">
+            {{ form_start(form) }}
+            {{ form_row(form.choiceoption) }}
+            <div class="form-body">
+                <h3 class="form-section">{{ 'form.label.civilstatus'|trans }}</h3>
+                {{ form_row(form.people.civility) }}
+                {{ form_row(form.people.lastName) }}
+                {{ form_row(form.people.firstName) }}
+                {{ form_row(form.people.socialSecurity) }}
+                <div class="internal-body">
+                    {{ form_widget(form.payslip, {'value' : setpayslip}) }}
+                </div>
+                {{ form_row(form.people.birthdate) }}
+                {{ form_row(form.people.birthCity) }}
+                {{ form_row(form.people.birthDistrict) }}
+                {{ form_row(form.people.addressLine1) }}
+                {{ form_row(form.people.addressLine2) }}
+                {{ form_row(form.people.addressCity) }}
+                {{ form_row(form.people.addressZipcode) }}
+                {{ form_row(form.people.addressCountry) }}
+                <h3 class="form-section">{{ 'Contract'|trans }}</h3>
+                {{ form_row(form.employee.schedulemodel,{'placeholder':''}) }}
+                {{ form_row(form.employee.payslipmodel,{ 'placeholder': '' }) }}
+                <div class="hiddenemployeeotherpart">
+                    {{ form_row(form.employee.healthcare,{ 'attr': {'class': 'hidden-row'}})}}
+                    {{ form_row(form.employee.serial,{ 'attr': {'class': 'hidden-row'}})}}
+                </div>
+                <div class="interim-body">
+                    {{ form_row(form.contract.establishment) }}
+                    {{ form_row(form.contract.typeReason, {'value' : setTypeReason|number_format})}}
+                    {{ form_row(form.contract.interimAgency) }}
+                </div>
+                {{ form_row(form.contract.startDate) }}
+                {{ form_row(form.contract.endDate) }}
+                <div class="internal-body-two">
+                    {{ form_row(form.contract.universityName) }}
+                    {{ form_row(form.contract.tutorName) }}
+                    {{ form_row(form.job.paymentMode) }}
+                </div>
+            </div>
+            <div class="form-actions">
+                <a class="btn btn-default" href="{{ path('app_company_employee_index', { 'company' : company.id })}}"> {{ 'action.cancel'|trans }}</a>
+                <button class="btn btn-primary" type="submit" value="create" name="">{{ "action.add_extern"|trans }}</button>
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+{% endblock %}
+{% block pagescript %}
+    <script>
+        jQuery(document).ready(function() {
+            Digipay.init();
+            $(".internal-body,.internal-body-two").hide();
+            $('#add_extern_workflow_payslip_baseWage').val(0);
+            $('#add_extern_workflow_payslip_baseWage').removeAttr('required');
+            $('.hiddenemployeeotherpart').hide();
+            if(localStorage.getItem('addExternalEmployee') === undefined){
+                $('#add_extern_workflow_payslip_baseWage').val(0);
+                $('#add_extern_workflow_job_paymentMode').val(2);
+              //  $('#select2-add_extern_workflow_choiceoption-container').text("stagiaire");
+            }
+            if(localStorage.getItem('addExternalEmployee') === 'stage'){
+                $(".internal-body,.internal-body-two").show(800);
+                $(".interim-body").hide(800);
+                $(".form-actions button").attr('name','_stage');
+                $('this option[value=stage]').prop('selected', true);
+                $('this option[value=interim]').prop('selected', false);
+                $('#add_extern_workflow_payslip_baseWage').prop('required',true);
+                $('#select2-add_extern_workflow_choiceoption-container').text("stagiaire");
+            }
+            $("#add_extern_workflow_choiceoption").change(function(){
+                console.log($('this option:selected').text());
+
+                //console.log($( "#add_extern_workflow_choiceoption option:selected" ).text());
+                if($(this).val()==='interim'){
+                    localStorage.setItem('addExternalEmployee', 'interim');
+                    $('#add_extern_workflow_payslip_baseWage').val(0);
+                    $('#add_extern_workflow_job_paymentMode').val(2);
+                    $('html, body').animate({ scrollTop: 200 }, 500);
+                    $(".interim-body").show(800);
+                    $(".internal-body,.internal-body-two").hide(800);
+                    $(".form-actions button").attr('name','_interim');
+                    $('this option[value=interim]').prop('selected', true);
+                    $('this option[value=stage]').prop('selected', false);
+                    $(' #add_extern_workflow_payslip_baseWage').removeAttr('required');
+                    $(' #add_extern_workflow_payslip_baseWage').val(null);
+                }else if($(this).val()==='stage'){
+                    localStorage.setItem('addExternalEmployee', 'stage');
+                    $('html, body').animate({ scrollTop: 200 }, 500);
+                    $(".internal-body,.internal-body-two").show(800);
+                    $(".interim-body").hide(800);
+                    $(".form-actions button").attr('name','_stage');
+                    $('this option[value=stage]').prop('selected', true);
+                    $('this option[value=interim]').prop('selected', false);
+                    $('#add_extern_workflow_payslip_baseWage').prop('required',true);
+                }
+            });
+        });
+    </script>
+{% endblock %}
