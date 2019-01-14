@@ -1,0 +1,22 @@
+   //Collapse events on years containers
+            var firstyearid ='{{ "now"|date("Y") }}header';
+            var d = new Date();
+            var n = d.getFullYear();
+            var firstYearUnfold="";
+            for (var i = n ; i >2016; i--) {
+                if($('.'+i+'yearclass').length>0){
+                    //Get only the first one
+                    if(firstYearUnfold==""){ firstYearUnfold=i; }
+                    var forappend = "<li class='collable-element'><div id='"+i+"header' class='collapsible-header'>"+i+"</div> <div id='"+i+"body' class='collapsible-body'><span></span></div></li>";
+                    $('#events-collapsible-years-container').append(forappend);
+                    $('#'+i+'body span').append($('.'+i+'yearclass'));
+                }
+
+            }
+            //Unfold the last year
+            if(firstYearUnfold!=""){
+                $("#"+firstYearUnfold+"header").parent().addClass("active");
+                $("#"+firstYearUnfold+"header").addClass("active");
+                $("#"+firstYearUnfold+"body").css("display", "block");
+            }
+        });

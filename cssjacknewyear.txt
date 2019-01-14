@@ -1,0 +1,22 @@
+
+         #events-collapsible-years-container {
+  border: none;
+  li.collable-element {
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+    color: black;
+    span.badge {
+      color: white !important;
+      margin-top: -14px;
+    }
+  }
+  .collapsible-header {
+    border: none;
+    font-weight: bold;
+  }
+  .collapsible-body {
+    border: none;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+}
