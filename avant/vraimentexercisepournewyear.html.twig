@@ -2,11 +2,37 @@
 
 {% set lastYear = false %}
 <ul id="events-collapsible-years-container" class="collapsible" >
+    <li class="collable-element">
+        <div id='2019header' class="collapsible-header active">2019</div>
+        <div id='2019body' class="collapsible-body"><span></span></div>
+    </li>
+    <li class="collable-element">
+        <div id='2018header' class="collapsible-header">2018</div>
+        <div id='2018body' class="collapsible-body"><span></span></div>
+    </li>
+    <li class="collable-element">
+        <div id='2017header' class="collapsible-header">2017</div>
+        <div id='2017body' class="collapsible-body"><span></span></div>
+    </li>
 </ul>
 
-{% set numberofyear = "now"|date("Y")  %}
+{% set numberofyear = "now"|date("Y") - 2017 %}
+{{numberofyear}}
     {% for event in events %}
-        <div id = "distincyeardiv" class = "{{event.startDate}}yearclass">
+    {% if event.startDate|date('Y') > "now"|date("Y") - 1 %}
+    {% set year =  "now"|date("Y") %}
+    <li class="collable-element">
+      <div id='{{event.startDate|date('Y')}}header' class="collapsible-header active">2019</div>
+        <div id='2019body' class="collapsible-body"><span></span></div>
+    </li>
+<div id = "distincyeardiv" class = "thisyear">
+    {% elseif event.startDate|date('Y') == "now"|date("Y") - 1 %}
+    {% set year =  "now"|date("Y") - 1  %}
+    <div id = "distincyeardiv" class = "beforeyear">
+        {% else %}
+        {% set year =  "now"|date("Y") - 2  %}
+        <div id = "distincyeardiv" class = "anotherbeforeyear">
+            {% endif %}
             <div class="row">
                 <div class="col s12">
                     <div class="card card-event">
@@ -85,31 +111,26 @@
             </div>
         </div>
 
-    {% endfor %}
+        {% endfor %}
         {% block pagescript %}
             <script src="/js/jquery.min.js" type="text/javascript"></script>
             <script>
 
+              var i;
+              var numberofyear =  {{ numberofyear}};
+              for (i = 2017 ; i <numberofyear+1; i++) {
+                var forappendheader =numberofyearff+'header';
+                var forappendheader =numberofyearff+'body';
+                $('#events-collapsible-years-container').append('');
+              }
                 $(document).ready(function() {
-                    var i;
-                    var d = new Date();
-                    var n = d.getFullYear();
-                    for (i = n ; i >2016; i--) {
-                        var forappendheader =i+'header';
-                        var forappendbody =i+'body';
-                        var forappendbodyid ='#'+i+'body span';
-                        var nameyearclass ='.'+i+'yearclass';
-                        var headyearclass = $(nameyearclass);
-                        var forappend = " <li class='collable-element'><div id="+forappendheader+" class='collapsible-header'>"+i+"</div> <div id='" +forappendbody+"' class='collapsible-body'><span></span></div></li>";
-                        $('#events-collapsible-years-container').append(forappend);
-                        $(forappendbodyid).append(headyearclass);
-                    }
                     var thisyear = $('.thisyear');
                     var beforeyear = $('.beforeyear');
                     var anotherbeforeyear = $('.anotherbeforeyear');
-
-
-
+                    $('#2019body span').append(thisyear);
+                    $('#2018body span').append(beforeyear);
+                    $('#2017body span').append(anotherbeforeyear);
+                    $(".badge event-status").css("color", "white");
                 });
             </script>
         {% endblock %}
