@@ -1,0 +1,213 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'Employee'|trans }} - {{ sage_employee_name(employee) }}{% endblock %}
+
+{% block titleWraper %}
+    <div class="media profile-header">
+        <div class="pull-right">
+            <div class="btn-group">
+                <a class="btn  btn-success btn-lg dropdown-toggle" data-toggle="dropdown" href="javascript:;" aria-expanded="false"> Actions
+                    <i class="fa fa-angle-down"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-right">
+                    {% set action_menu = knp_menu_get('drhemployeeactions', [], {'employee': employee }) %}
+                    {{ knp_menu_render(action_menu,
+                    {'template': ':parts:sidebar-menu-template.html.twig',
+                        'depth': 1,
+                        'currentAsLink': true,
+                        'currentClass' :'active'}) }}
+                </ul>
+            </div>
+        </div>
+
+        <div class="media-left">
+            <div class="profile-picture">
+                {% set avatar_url = sage_employee_avatar_url(employee) %}
+                {% if avatar_url %}
+                    <img src="{{ avatar_url }}" class="img-responsive" alt="">
+                {% else %}
+                    <div class="initial-wrapper">
+                        <span class="initial-letters">{{ sage_employee_name(employee, false) }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="media-body">
+            <h1 class="page-title">{{ sage_employee_name(employee) }}
+                <small>
+                    {% if employee.userAccess.user.lastLogin|default(false) %}
+                        {{ 'label.last_login'|trans({'%date%': employee.userAccess.user.lastLogin|date('d/m/Y H:i') }) }}
+                    {% elseif employee.userAccess.user|default(false) %}
+                        {{ 'label.never_logged'|trans }}
+                    {% else %}
+                        <span class="font-red">{{ 'label.no_account'|trans }}</span>
+                    {% endif %}
+                </small>
+            </h1>
+
+            {% set job = employee.jobs[0]|default(false) %}
+            {% set cts = employee.contracts[0]|default(false) %}
+
+            <dl class="dl-horizontal">
+                <dt>{{ 'Matricule'|trans }}</dt><dd id="employee-serial">{{ employee.serial }}</dd>
+                {% if cts %}
+                <dt>{{ 'Contract'|trans }}</dt>
+                <dd>{{ cts.type.title|default('--') }}  {{ cts.startDate|date('d/m/Y') }} - {% if cts.endDate %}{{ cts.endDate|date('d/m/Y') }}{% else %}...{% endif %}</dd>
+                <dt>{{ 'Establishment'|trans }}</dt>
+                <dd>{{ cts.establishment.name|default('--') }}</dd>
+                {% endif %}
+                <dt>{{ 'Job held'|trans }}</dt><dd>{{ job.jobHeld|default('--') }}</dd>
+                {% set managers = sage_employee_managers(employee) %}
+                {% if managers|length > 0 %}
+                <dt>{{ 'Managers Emails'|trans }}</dt>
+                <dd>
+                    <span class="badge badge-default">{{ managers|length }}</span>
+                    {% set managers_j = managers|join(', ') %}
+                    <span
+                        class="popovers"
+                        data-content="{{ managers_j }}"
+                        data-trigger="hover"
+                        data-placement="bottom"
+                        data-original-title="Emails"
+                            > {{ managers_j|length > 50 ? managers_j|slice(0, 50) ~ '...' : managers_j }} </span>
+                </dd>
+                {% endif %}
+            </dl>
+
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block pageContent %}
+<div class="row">
+    <div class="col-md-12">
+
+        <!-- END SIDEBAR USER TITLE -->
+        <div class="profile-tabs tabbable-line">
+            <ul class="nav nav-tabs">
+                {% set employee_menu = knp_menu_get('drhemployee', [], {'employee': employee }) %}
+                {{ knp_menu_render(employee_menu,
+                {'template': ':parts:sidebar-menu-template.html.twig',
+                    'depth': 1,
+                    'currentAsLink': true,
+                    'currentClass' :'active'}) }}
+            </ul>
+        </div>
+
+        <!-- BEGIN PROFILE CONTENT -->
+        <div class="profile-content">
+                {% block profileContent %}
+                {% endblock %}
+        </div>
+        <!-- END PROFILE CONTENT -->
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheet %}
+    <link href="{{ asset('css/jquery-ui.css') }}" rel="stylesheet" type="text/css" />
+{% endblock stylesheet %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {#<script src="{{ asset('js/jquery.min.js') }}" type="text/javascript"></script> #}
+    <script src="{{ asset('js/jquery-ui.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/materialize.js') }}" type="text/javascript"></script>
+{% endblock javascripts %}
+
+{% block pagescript %}
+    {{ parent() }}
+    <script>
+        $( document ).ready(function() {
+
+            $('#tablelistingevent tbody').remove();
+            //Collapse events on years containers
+            var d = new Date();
+            var n = d.getFullYear();
+            var firstYearUnfold="";
+            var yeararr = [];
+
+            $("#" + n + 'body').hide();
+            for (var i = n ; i >2016; i--) {
+                if($('.'+i+'yearclass').length>0){
+                    //Get only the first one
+                    if(firstYearUnfold==""){ firstYearUnfold=i; }
+                    var sortheader = "<th><div class='employee_event_sort_container1'>{{ 'Type'|trans }}</div><div id='employee_event_sort_container2'><button type='button' onclick='sortTable(0)' class='btn btn-default btn-sm' id='employee_event_sort_container2_btn_icon'><i class='fa fa-sort'></i></button></div></th><th>{{ 'From'|trans }}</th><th>{{ 'To'|trans }}</th><th>{{ 'Proof document'|trans }}</th><th>{{ 'Status'|trans }}</th>";
+                    var forappend = "<li class='collable-element'><div id='"+i+"header' class='collapsible-header'>"+i+"</div><div id='"+i+"body' class='collapsible-body'><table id='"+i+"yeartable' class='table table-hover'><thead><tr>"+sortheader+"</tr></thead><tbody></tbody></table></div></li>";
+                   // var forappend = "<li class='collable-element'><div id='"+i+"header' class='collapsible-header'>"+i+"</div><div id='"+i+"body' class='collapsible-body'><table id='"+i+"yeartable'><tr><th>asdf</th><th>asdf</th><th>asdf</th><th>asdf</th><th>asdf</th></tr></table></div></li>";
+                    $('#events-collapsible-years-container').append(forappend);
+                    $('#'+i+'yeartable tbody').append($('.'+i+'yearclass'));
+                   // $('#'+i+'body').append($('.'+i+'yearclass'));
+                  //  $('#tablelistingevent tbody').append($('#'+i+'body'));
+                }
+            }
+            //Unfold the last year
+            if(firstYearUnfold!=""){
+                $("#"+firstYearUnfold+"header").parent().addClass("active");
+                $("#"+firstYearUnfold+"header").addClass("active");
+                $("#"+firstYearUnfold+"body").css("display", "block");
+            }
+
+            //Put the content on the good container
+            $("#tablelistingevent").append($('#events-collapsible-years-container'));
+            $('.collapsible').collapsible();
+        });
+        //table listing
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById("2018yeartable");
+            switching = true;
+            //Set the sorting direction to ascending:
+            dir = "asc";
+            /*Make a loop that will continue until
+            no switching has been done:*/
+            while (switching) {
+                //start by saying: no switching is done:
+                switching = false;
+                rows = table.rows;
+                /*Loop through all table rows (except the
+                first, which contains table headers):*/
+                for (i = 1; i < (rows.length - 1); i++) {
+                    //start by saying there should be no switching:
+                    shouldSwitch = false;
+                    /*Get the two elements you want to compare,
+                    one from current row and one from the next:*/
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    /*check if the two rows should switch place,
+                    based on the direction, asc or desc:*/
+                    if (dir == "asc") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            //if so, mark as a switch and break the loop:
+                            shouldSwitch= true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            //if so, mark as a switch and break the loop:
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    /*If a switch has been marked, make the switch
+                    and mark that a switch has been done:*/
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    //Each time a switch is done, increase this count by 1:
+                    switchcount ++;
+                } else {
+                    /*If no switching has been done AND the direction is "asc",
+                    set the direction to "desc" and run the while loop again.*/
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
+    </script>
+{% endblock %}
