@@ -1,0 +1,66 @@
+{% embed "AppBundle:Component:table.html.twig" %}
+    {% block title %}{{ title|default('Closure')|trans }}{% endblock %}
+    {% block actions %}
+        <a class="btn btn-primary" href="{{ path('app_company_file_paystatesv2', {'company' : company.id}) }}">
+            <i class="fa fa-file-o"></i>
+            {{ 'Pay States'|trans }}</a>
+    {% endblock %}
+    {% block tbefore %}
+        <ul id="events-collapsible-years-containerback" class="collapsible" ></ul>
+        <table>
+            {% for closure in closures|sort|reverse %}
+                <tr class="{{closure.periodStart|date('Y')}}yearclass">
+                    <td> {{ closure.periodStart|intl_date('d MMMM y') }} </td>
+                    <td> {{ closure.periodEnd|intl_date('d MMMM y') }} </td>
+                    <td>
+                        {% if closure.status == 0 %}
+                            {{ 'status.closure.inactive'|trans }}
+                        {% elseif closure.status == 1 %}
+                            {{ 'status.closure.validated'|trans }}
+                        {% elseif closure.status == 2 %}
+                            {{ 'status.closure.payslip'|trans }}
+                        {% elseif closure.status == 3 %}
+                            {{ 'status.closure.complete'|trans }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% include('AppBundle:Company/Closure:actions.html.twig') %}
+                    </td>
+                </tr>
+
+            {% endfor %}
+        </table>
+    {% endblock %}
+{% endembed %}
+{% block pagescript %}
+    <script src="/js/jquery.min.js" type="text/javascript"></script>
+    <script>
+        $( document ).ready(function() {
+            $('#tablelistingevent tbody').remove();
+            //Collapse events on years containers
+            var d = new Date();
+            var n = d.getFullYear();
+            var firstYearUnfold="";
+            $("#" + n + 'body').hide();
+            for (var i = n ; i >2016; i--) {
+                if($('.'+i+'yearclass').length>0){
+                    //Get only the first one
+                    if(firstYearUnfold==""){ firstYearUnfold=i; }
+                    var sortheader = "<th>{{ 'Start date'|trans }}</div><div id='employee_event_sort_container2'</th><th>{{ 'From'|trans }}</th><th>{{ 'End date'|trans }}</th><th>{{ 'Status'|trans }}</th><th>{{ 'Actions'|trans }}</th>";
+                    var forappend = "<li class='collable-element'><div id='"+i+"header' class='collapsible-header'>"+i+"</div><div id='"+i+"body' class='collapsible-body'><table id='"+i+"yeartable' class='table table-hover'><thead><tr>"+sortheader+"</tr></thead><tbody></tbody></table></div></li>";
+                    $('#events-collapsible-years-containerback').append(forappend);
+                    $('#'+i+'yeartable tbody').append($('.'+i+'yearclass'));
+                }
+            }
+            //Unfold the last year
+            if(firstYearUnfold!=""){
+                $("#"+firstYearUnfold+"header").parent().addClass("active");
+                $("#"+firstYearUnfold+"header").addClass("active");
+                $("#"+firstYearUnfold+"body").css("display", "block");
+            }
+            //Put the content on the good container
+            $("#tablelisting").append($('#events-collapsible-years-containerback'));
+            $('.collapsible').collapsible();
+        });
+    </script>
+{% endblock %}
