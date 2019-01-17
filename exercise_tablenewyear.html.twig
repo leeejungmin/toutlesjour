@@ -111,6 +111,7 @@
 
 {% block javascripts %}
     {{ parent() }}
+    {#<script src="{{ asset('js/jquery.min.js') }}" type="text/javascript"></script> #}
     <script src="{{ asset('js/jquery-ui.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/materialize.js') }}" type="text/javascript"></script>
 {% endblock javascripts %}
@@ -119,20 +120,25 @@
     {{ parent() }}
     <script>
         $( document ).ready(function() {
+
             $('#tablelistingevent tbody').remove();
             //Collapse events on years containers
             var d = new Date();
             var n = d.getFullYear();
             var firstYearUnfold="";
+            var yeararr = [];
+
             $("#" + n + 'body').hide();
             for (var i = n ; i >2016; i--) {
                 if($('.'+i+'yearclass').length>0){
                     //Get only the first one
                     if(firstYearUnfold==""){ firstYearUnfold=i; }
-                    var sortheader = "<th><div class='employee_event_sort_container1'>{{ 'Type'|trans }}</div><div id='employee_event_sort_container2'><button type='button' onclick='sortTable("+i+")' class='btn btn-default btn-sm' id='employee_event_sort_container2_btn_icon'><i class='fa fa-sort'></i></button></div></th><th>{{ 'From'|trans }}</th><th>{{ 'To'|trans }}</th><th>{{ 'Proof document'|trans }}</th><th>{{ 'Status'|trans }}</th>";
+                    var sortheader = "<th><div class='employee_event_sort_container1'>{{ 'Type'|trans }}</div><div id='employee_event_sort_container2'><button type='button' onclick='sortTable(0)' class='btn btn-default btn-sm' id='employee_event_sort_container2_btn_icon'><i class='fa fa-sort'></i></button></div></th><th>{{ 'From'|trans }}</th><th>{{ 'To'|trans }}</th><th>{{ 'Proof document'|trans }}</th><th>{{ 'Status'|trans }}</th>";
                     var forappend = "<li class='collable-element'><div id='"+i+"header' class='collapsible-header'>"+i+"</div><div id='"+i+"body' class='collapsible-body'><table id='"+i+"yeartable' class='table table-hover'><thead><tr>"+sortheader+"</tr></thead><tbody></tbody></table></div></li>";
+                    // var forappend = "<li class='collable-element'><div id='"+i+"header' class='collapsible-header'>"+i+"</div><div id='"+i+"body' class='collapsible-body'><table id='"+i+"yeartable'><tr><th>asdf</th><th>asdf</th><th>asdf</th><th>asdf</th><th>asdf</th></tr></table></div></li>";
                     $('#events-collapsible-years-container').append(forappend);
                     $('#'+i+'yeartable tbody').append($('.'+i+'yearclass'));
+                    yeararr.push(i+'yeartable');
                 }
             }
             //Unfold the last year
@@ -141,23 +147,34 @@
                 $("#"+firstYearUnfold+"header").addClass("active");
                 $("#"+firstYearUnfold+"body").css("display", "block");
             }
+
             //Put the content on the good container
             $("#tablelistingevent").append($('#events-collapsible-years-container'));
             $('.collapsible').collapsible();
         });
 
         //table listing
-        function sortTable(j) {
+        function sortTable(n) {
+
+
             var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            //j is for selected each year
-            n = 0;
+
             switching = true;
             //Set the sorting direction to ascending:
             dir = "asc";
             /*Make a loop that will continue until
             no switching has been done:*/
-            //call table for selected year
+            var d = new Date();
+            var n = d.getFullYear();
+            var firstYearUnfold="";
+            var yeararr = [];
+            for (var j = n ; j >2016; j--) {
+                if ($('.' + j + 'yearclass').length > 0) {
+                    if (firstYearUnfold == "") {
+                        firstYearUnfold = j;
+                    }
                     table = document.getElementById(j + "yeartable");
+                    console.log(table);
                     while (switching) {
                         //start by saying: no switching is done:
                         switching = false;
@@ -204,6 +221,9 @@
                             }
                         }
                     }//while
+                }
+            }//for
+
         }
     </script>
 {% endblock %}
