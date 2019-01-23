@@ -1,0 +1,64 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'action.add_company'|trans }}{% endblock %}
+
+{% block pageContent %}
+<div class="portlet">
+    <div class="portlet-body form">
+        {{ form_start(form) }}
+        <div class="form-body">
+            <h3 class="form-section">Identity Company - SOCIETE.com</h3>
+            {{ form_row(form.siren) }}
+            {{ form_row(form.sync_api) }}
+            <h3 class="form-section">Company {{ form.company.siren.vars.data }}</h3>
+            {{ form_widget(form.company) }}
+            <h3 class="form-section">Closure</h3>
+            {{ form_row(form.closureStartMonth) }}
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-default" href="{{ path('app_home_index')}}"> {{ 'action.cancel'|trans }}</a>
+            <button class="btn btn-primary" type="submit" value="create">{{ 'action.add_company'|trans }}</button>
+        </div>
+        {{ form_end(form) }}
+    </div>
+    <button id='test' class="btn btn-primary" >test</button>
+</div>
+{% endblock %}
+
+{% block pagescript %}
+    {{ parent() }}
+<script>
+    $( document ).ready(function() {
+
+        console.log('jungmin');
+        $("#test").click(function(e){
+            e.preventDefault();
+            var token = '414b4121-0027-3c3d-9b68-db7d72c4f26e';
+            var JWT = '414b4121-0027-3c3d-9b68-db7d72c4f26e';
+            $.ajax({
+                url: 'https://api.insee.fr/entreprises/sirene/V3/siren/788733731',
+               /* headers:{
+                    //token:"414b4121-0027-3c3d-9b68-db7d72c4f26e"
+                    Authorization:"Bearer 414b4121-0027-3c3d-9b68-db7d72c4f26e"
+                },*/
+                /*beforeSend : function( xhr ) {
+                    xhr.setRequestHeader( 'Authorization', 'Bearer 414b4121-0027-3c3d-9b68-db7d72c4f26e' );
+                },*/
+                /*beforeSend: function(request){
+                    request.setRequestHeader('Authorization', 'Bearer ' + JWT);
+                },*/
+                beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + token); },
+                type: 'GET',
+                success: function(data) {
+                    console.log('jungminsuccess!!');
+                    // Decode and show the returned data nicely.
+                },
+                error: function() {
+                    alert('error');
+                }
+            });
+        });
+
+    })
+</script>
+{% endblock %}
