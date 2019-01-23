@@ -1,0 +1,196 @@
+{% set can_cancel_event = is_granted('ROLE_PAY_ADMIN') %}
+{% embed "AppBundle:Component:tableEvent.html.twig" with { 'icon' : 'fa fa-calendar' }%}
+    {% block title %}{{ title|default('Events')|trans }}{% endblock %}
+    {% block thead %}
+        <tr>
+            <th>
+                <div class="employee_event_sort_container1">
+                    {{ 'Type'|trans }}
+                </div>
+                <div id="employee_event_sort_container2">
+                    <button type="button" onclick="sortTable(0)" class="btn btn-default btn-sm" id="employee_event_sort_container2_btn_icon">
+                        <i class="fa fa-sort"></i>
+                    </button>
+                </div>
+            </th>
+            <th> {{ 'From'|trans }} </th>
+            <th> {{ 'To'|trans }} </th>
+            <th> {{ 'Proof document'|trans }}</th>
+            <th>{{ 'Status'|trans }}</th>
+        </tr>
+    {% endblock %}
+    {% block tbody %}
+        <ul id="events-collapsible-years-container" class="collapsible" >
+
+        </ul>
+
+        {% for event in events %}
+            <tr class="{{event.startDate|date('Y')}}yearclass">
+                    <td>
+                        {# Set a Flag that save if we show the specific title else show the Global Event Title #}
+                        {% set specificEventTitleShow = false %}
+
+                        {# Change the Title View To the Specific Compny View #}
+                        {% if eventsReferencesByCompany is defined %}
+                            {% for eventShow in eventsReferencesByCompany %}
+                                {%  if event.type.id == eventShow.referenceEvent.id %}
+                                    {{ eventShow.title }}
+                                    {% set specificEventTitleShow = true %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {# This title must show when we don't find the Company Title
+                            The special case is when the Manage disable an Event and The Employee still have it ! #}
+                        {%  if specificEventTitleShow==false %}
+                            {{ event.type.title }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ event.startDate|date('d/m/Y') }}
+                        {% if event.startDate|date('H') == '12' %}
+                            {{ 'form.event.noon'|trans }}
+                        {% else %}
+                            {{ 'form.event.morning'|trans }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ event.endDate|date('d/m/Y') }}
+                        {% if event.endDate|date('H') == '12' %}
+                            {{ 'form.event.noon'|trans }}
+                        {% else %}
+                            {{ 'form.event.evening'|trans }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ include('AppBundle:Company/Employee/File:btn.html.twig', { 'file' : event.file }) }}
+                    </td>
+                    <td>
+                        {% if event.status == 0 %}
+                            {% if is_granted('DIGIPAYE_EVENT_APPROVE', event) %}
+                                <div class="btn-group btn-group-circle">
+                                    <a class="btn btn-outline green btn-sm"
+                                       href="{{ path('app_company_calendar_approve', {'company': company.id, 'id': event.id })}}">{{ 'action.approve'|trans }}</a>
+                                    <a class="btn btn-outline red btn-sm"
+                                       href="{{ path('app_company_calendar_reject', {'company': company.id, 'id': event.id })}}">{{ 'action.reject'|trans }}</a>
+                                </div>
+                            {% else %}
+                                <span class="label label-warning">{{ "status.waiting"|trans }}</span>
+                            {% endif %}
+                        {% elseif event.status == 1 %}
+                            {% if can_cancel_event or accessDrh or accessManager %}
+                                <a class="btn btn-outline red btn-sm"
+                                   href="{{ path('app_company_calendar_cancel', {'company': company.id, 'id': event.id })}}">{{ 'action.cancel'|trans }}</a>
+                            {% endif %}
+                            <span class="label label-success">{{ "status.accepted"|trans }}</span>
+                        {% elseif event.status == 2 %}
+                            <span class="label label-danger">{{ "status.rejected"|trans }}</span>
+                        {% elseif event.status == 3 %}
+                            <span class="label label-danger">{{ "status.canceled"|trans }}  {{ event.canceledAt|intl_date('d MMMM y')}}</span>
+                        {% else %}
+                            <i class="fa fa-question"></i>
+                        {% endif %}
+                    </td>
+                    </td>
+            </tr>
+        {% endfor %}
+        <script>
+            function sortTable(n) {
+                var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+                table = document.getElementById("tablelistingevent");
+                switching = true;
+                //Set the sorting direction to ascending:
+                dir = "asc";
+                /*Make a loop that will continue until
+                no switching has been done:*/
+                while (switching) {
+                    //start by saying: no switching is done:
+                    switching = false;
+                    rows = table.rows;
+                    /*Loop through all table rows (except the
+                    first, which contains table headers):*/
+                    for (i = 1; i < (rows.length - 1); i++) {
+                        //start by saying there should be no switching:
+                        shouldSwitch = false;
+                        /*Get the two elements you want to compare,
+                        one from current row and one from the next:*/
+                        x = rows[i].getElementsByTagName("TD")[n];
+                        y = rows[i + 1].getElementsByTagName("TD")[n];
+                        /*check if the two rows should switch place,
+                        based on the direction, asc or desc:*/
+                        if (dir == "asc") {
+                            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                                //if so, mark as a switch and break the loop:
+                                shouldSwitch= true;
+                                break;
+                            }
+                        } else if (dir == "desc") {
+                            if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                                //if so, mark as a switch and break the loop:
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (shouldSwitch) {
+                        /*If a switch has been marked, make the switch
+                        and mark that a switch has been done:*/
+                        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                        switching = true;
+                        //Each time a switch is done, increase this count by 1:
+                        switchcount ++;
+                    } else {
+                        /*If no switching has been done AND the direction is "asc",
+                        set the direction to "desc" and run the while loop again.*/
+                        if (switchcount == 0 && dir == "asc") {
+                            dir = "desc";
+                            switching = true;
+                        }
+                    }
+                }
+            }
+        </script>
+    {% endblock %}
+{% endembed %}
+{% block pagescript %}
+    <script src="/js/jquery.min.js" type="text/javascript"></script>
+    <script>
+        //Collapse events on years containers
+        var d = new Date();
+        var n = d.getFullYear();
+        var firstYearUnfold="";
+        for (var i = n ; i >2016; i--) {
+            if($('.'+i+'yearclass').length>0){
+//Get only the first one
+                if(firstYearUnfold==""){ firstYearUnfold=i; }
+                var forappend = "<li class='collable-element'><div id='"+i+"header' class='collapsible-header'>"+i+"</div> <div id='"+i+"body' class='collapsible-body'><span></span></div></li>";
+                $('#events-collapsible-years-container').append(forappend);
+                $('#'+i+'body span').append($('.'+i+'yearclass'));
+            }
+
+        }
+        //Unfold the last year
+        if(firstYearUnfold!=""){
+            $("#"+firstYearUnfold+"header").parent().addClass("active");
+            $("#"+firstYearUnfold+"header").addClass("active");
+            $("#"+firstYearUnfold+"body").css("display", "block");
+        }
+
+
+
+
+
+var sortheader = "<tr><th><div class='employee_event_sort_container1'>{{ 'Type'|trans }}</div><div id='employee_event_sort_container2'><button type='button' onclick='sortTable(0)' class='btn btn-default btn-sm' id='employee_event_sort_container2_btn_icon'><i class='fa fa-sort'></i></button></div></th><th>{{ 'From'|trans }} </th> <th> {{ 'To'|trans }} </th> <th> {{ 'Proof document'|trans }}</th> <th>{{ 'Status'|trans }}</th>' </tr>";
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+{% endblock %}
