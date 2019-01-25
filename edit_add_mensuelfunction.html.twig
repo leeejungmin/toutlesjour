@@ -1,0 +1,156 @@
+{% extends "AppBundle:Company/Employee:base.html.twig" %}
+
+{% block profileContent %}
+{% set isFirst = true %}
+<div class="">
+        {{ form_start(form) }}
+        <div id="accordion1" class="panel-group">
+        {% for child in form %}
+            {# Skip token render in accordion #}
+            {% if not (child.vars.name starts with '_') and not (child.children is empty) %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <a class="accordion-toggle accordion-toggle-styled" data-toggle="collapse" data-parent="#accordion1" href="#accordion1_{{ loop.index }}">
+                        <h4 class="panel-title">
+                             {{ child.vars.label|trans }}
+                             {% if not child.vars.valid %}
+                             <span class="badge bg-red">! {{ "errors"|trans }}</span>
+                             {% endif %}
+                        </h4>
+                    </a>
+                </div>
+                <div id="accordion1_{{ loop.index }}" class="panel-collapse collapse{% if isFirst %} in{% set isFirst = false %}{% endif%}">
+                    <div class="panel-body">
+                    {% if child.vars.name == "payslip" %}
+                    {{ form_row(form.payslipmodel) }}
+                    {% endif %}
+                    {% if child.vars.name == "job" %}
+                        {{ form_row(form.job.collectiveAgreement) }}
+                        {{ form_row(form.schedulemodel) }}
+                        <div id="forschedule_horaire_libre_container"></div>
+                        {{ form_row(form.job.department) }}
+                        {{ form_row(form.job.service) }}
+                        {{ form_row(form.job.unit) }}
+                        {{ form_row(form.job.jobHeld) }}
+                        {{ form_row(form.job.jobIndex) }}
+                        {{ form_row(form.job.qualification) }}
+                        {{ form_row(form.job.level) }}
+                        <div id="paymodediv">
+                            {{ form_row(form.job.paymentMode) }}
+                        </div>
+                    <div id="schedule_horaire_libre_container" class="display-none">
+                        {{ form_row(form.horairelibrehebdomadaire,
+                            {
+                                'row_class': "schedulemodel-horaire-libre-hebdomadaire-row",
+                                'label_attr': {
+                                    'class': "schedulemodel-label-horaire-hebdomadaire",
+                                },
+                                'attr': {
+                                    'class': "schedulemodel-horaire-hebdomadaire",
+                                    'id': "schedulemodel-horaire-hebdomadaire",
+                                }
+                            }) }}
+                        {{ form_row(form.horairelibremensuel,
+                            {
+                                'row_class': "schedulemodel-horaire-libre-mensuel-row",
+                                'label_attr': {
+                                    'class': "schedulemodel-label-horaire-mensuel",
+                                },
+                                'attr': {
+                                    'class': "schedulemodel-horaire-mensuel",
+                                    'id': "schedulemodel-horaire-mensuel",
+                                }
+                            }) }}
+                    </div>
+                    {% endif %}
+                        {{ form_widget(child) }}
+                        <div id="healthcarediv">
+                            {{ form_row(form.healthcare) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary btn-block" name="action" value="save"> {{ 'action.save'|trans }} </button>
+        </div>
+        {{ form_end(form) }}
+</div>
+{% endblock %}
+
+{% block pagescript %}
+    <script>
+        //Add the listnr for the Schedule Model id
+        $( document ).ready(function() {
+            if($("#employee_edit_pay_schedulemodel").val() == 56){
+                $("#forschedule_horaire_libre_container").append($("#schedule_horaire_libre_container")  );
+                $("#schedule_horaire_libre_container").show();
+            }
+            $('#employee_edit_pay_payslip').append($('#healthcarediv'),$('#paymodediv'));
+            //Append Calculating Buttons
+            $(".schedulemodel-horaire-libre-hebdomadaire-row .col-sm-10").append( "<button id=\"horairelibre_calculate_mensuel\" class=\"btn btn-primary btn-block\">{{ 'calculate.monthly.schedule'|trans }}</button>" );
+            $(".schedulemodel-horaire-libre-mensuel-row .col-sm-10").append( "<button id=\"horairelibre_calculate_hebdomadaire\" class=\"btn btn-primary btn-block\">{{ 'calculate.weekly.schedule'|trans }}</button>" );
+
+            //Add the events on the buttons
+            $("#horairelibre_calculate_mensuel").click(function() {
+                var hebdo = document.getElementById("employee_edit_pay_horairelibrehebdomadaire").value;
+                hebdo = (hebdo*52)/12;
+                hebdo = parseFloat(hebdo.toFixed(2));
+                document.getElementById("employee_edit_pay_horairelibremensuel").value = hebdo;
+                return false;
+            });
+            $("#horairelibre_calculate_hebdomadaire").click(function() {
+                var mensuel = document.getElementById("employee_edit_pay_horairelibremensuel").value;
+                mensuel = (mensuel/52)*12;
+                mensuel = parseFloat(mensuel.toFixed(2));
+                document.getElementById("employee_edit_pay_horairelibrehebdomadaire").value = mensuel;
+                return false;
+            });
+
+            //Add the listner to show the bloc
+            $("#employee_edit_pay_schedulemodel").change(function() {
+                if(this.value==56){
+                    $("#forschedule_horaire_libre_container").append($("#schedule_horaire_libre_container")  );
+                    $("#schedule_horaire_libre_container").show( "slow" );
+                }else{
+                    $("#schedule_horaire_libre_container").hide( "slow" );
+                }
+            });
+
+            //Perform check after the page load (if the user had already a horaire libre)
+            if($("#employee_edit_pay_schedulemodel option:selected").val()==56){
+                $("#schedule_horaire_libre_container").show( "slow" );
+            }
+
+            //Populating the two fields
+            {% if openScheduleFront is defined and openScheduleFront is not empty %}
+            $("#employee_edit_pay_horairelibremensuel").val("{{ openScheduleFront['monthly'] }}");
+            $("#employee_edit_pay_horairelibrehebdomadaire").val("{{ openScheduleFront['weekly'] }}");
+            {%  endif %}
+
+        });
+
+    </script>
+    <script>
+    //TODO: Validation and Open Accordion on errors
+    $("form button[type='submit']").on("click", function(event) {
+        // traverse all the required elements looking for an empty one
+        $("form input[required='required']").each(function() {
+
+            // if the value is empty, that means that is invalid
+            if ($(this).val() == "") {
+
+                // hide the currently open accordion and open the one with the required field
+                $(".panel-collapse.in").removeClass("in");
+                $(this).closest(".panel-collapse").addClass("in").css("height","auto");
+
+                // stop scrolling through the required elements
+                return false;
+            }
+        });
+    });
+    </script>
+    {{ parent() }}
+{% endblock %}

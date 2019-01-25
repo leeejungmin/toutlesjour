@@ -8,9 +8,18 @@
         {{ form_start(form) }}
         <div class="form-body">
             <h3 class="form-section">Identity Company - SOCIETE.com</h3>
-            {{ form_row(form.siren) }}
-            {{ form_row(form.sync_api) }}
+            {#{{ form_row(form.siren) }}
+            {{ form_row(form.sync_api) }}#}
+            {{ form_row(form.company.siren) }}
+            <div class="form-group">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-10"><button id="add_company_workflow_sync_api"  class="purple btn">Retrieve company data from API</button>
+                </div>
+                <div id="companyapierrormessage"></div>
+            </div>
+
             <h3 class="form-section">Company {{ form.company.siren.vars.data }}</h3>
+            {{ form_row(form.siren) }}
             {{ form_widget(form.company) }}
             <h3 class="form-section">Closure</h3>
             {{ form_row(form.closureStartMonth) }}
@@ -21,7 +30,6 @@
         </div>
         {{ form_end(form) }}
     </div>
-    <button id='test' class="btn btn-primary" >test</button>
 </div>
 {% endblock %}
 
@@ -29,32 +37,39 @@
     {{ parent() }}
 <script>
     $( document ).ready(function() {
-
         console.log('jungmin');
-        $("#test").click(function(e){
+        $("#add_company_workflow_sync_api").click(function(e){
             e.preventDefault();
+            var companysiren = '';
+            var companysiren = $('#add_company_workflow_company_siren').val();
             var token = '414b4121-0027-3c3d-9b68-db7d72c4f26e';
-            var JWT = '414b4121-0027-3c3d-9b68-db7d72c4f26e';
+
             $.ajax({
-                url: 'https://api.insee.fr/entreprises/sirene/V3/siren/788733731',
-               /* headers:{
-                    //token:"414b4121-0027-3c3d-9b68-db7d72c4f26e"
-                    Authorization:"Bearer 414b4121-0027-3c3d-9b68-db7d72c4f26e"
-                },*/
-                /*beforeSend : function( xhr ) {
-                    xhr.setRequestHeader( 'Authorization', 'Bearer 414b4121-0027-3c3d-9b68-db7d72c4f26e' );
-                },*/
-                /*beforeSend: function(request){
-                    request.setRequestHeader('Authorization', 'Bearer ' + JWT);
-                },*/
+                url: 'https://api.insee.fr/entreprises/sirene/V3/siren/'+ companysiren,
                 beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + token); },
                 type: 'GET',
                 success: function(data) {
+                    var companyname = data.uniteLegale.periodesUniteLegale[0].denominationUniteLegale.replace(/[" "]/g, function (x) {
+                        return '_';
+                    });
+                    var companysiret = data.uniteLegale.siren + data.uniteLegale.periodesUniteLegale[0].nicSiegeUniteLegale;
+                    console.log(companysiret);
+                    $('#add_company_workflow_siren').val(data.uniteLegale.siren);
+                    $('#add_company_workflow_company_ape').val(data.uniteLegale.periodesUniteLegale[0].activitePrincipaleUniteLegale);
+                    $('#add_company_workflow_company_name').val(companyname);
+                    $('#add_company_workflow_company_siret').val(companysiret);
+              
                     console.log('jungminsuccess!!');
+                    console.log(data.uniteLegale.periodesUniteLegale[0]);
+                    console.log(data.uniteLegale.periodesUniteLegale[0].activitePrincipaleUniteLegale);
+                    console.log(data.uniteLegale.periodesUniteLegale[0].denominationUniteLegale);
+                    console.log(data.uniteLegale.periodesUniteLegale[0].nicSiegeUniteLegale);
+                    console.log(data.uniteLegale.siren);
+
                     // Decode and show the returned data nicely.
                 },
-                error: function() {
-                    alert('error');
+                error: function(header) {
+                    $('#companyapierrormessage').text('Cette siren est mauvaise');
                 }
             });
         });
