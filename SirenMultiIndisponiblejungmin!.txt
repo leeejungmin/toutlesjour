@@ -1,0 +1,5 @@
+﻿Le service UniteLegale /siren (Recherche multicritère d'unités légales) est actuellement indisponible.
+
+https://api.insee.fr/entreprises/sirene/V3/siret?q=siren:632013843 
+
+search documentaire.
