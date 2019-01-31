@@ -1,0 +1,32 @@
+SageBundle\Entity\InseeToken:
+    type: entity
+    table: insee_token
+    repositoryClass: SageBundle\Repository\InseeTokenRepository
+    id:
+        id:
+            type: integer
+            id: true
+            generator:
+                strategy: AUTO
+    manyToOne:
+        createdBy:
+            targetEntity: AppBundle\Entity\User
+            joinColumn:
+                name: created_by_id
+                nullable : false
+                referencedColumnName: id
+            gedmo:
+                blameable:
+                    on: create
+    fields:
+        token:
+            type: string
+            length: 255
+        expiration:
+            type: datetime
+        generatedAt:
+            type: datetime
+            gedmo:
+                timestampable:
+                    on: create
+    lifecycleCallbacks: {  }
