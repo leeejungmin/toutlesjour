@@ -7,48 +7,45 @@ use SageBundle\Entity\InseeToken;
 
 class InseeTokenManager
 {
-    private $token;
-    private $expiration;
     private $consumerKey    = 'GIcsAqDCoSXSs99cGtdl29Twj0Ma';
     private $consumerSecret	= 'Rf0kPAShqgmsFGH2UKgLzxCp8Ega';
     private $tokenUrl	    = 'https://api.insee.fr/token';
     private $establishUrl   = 'https://api.insee.fr/entreprises/sirene/V3/siret?q=siren:632013843 ';
     private $sirenhUrl	    = 'https://api.insee.fr/entreprises/sirene/V3/siren/632013843 ';
-    private $urlAuthenticate = 'Basic R0ljc0FxRENvU1hTczk5Y0d0ZGwyOVR3ajBNYTpSZjBrUEFTaHFnbXNGR0gyVUtnTHp4Q3A4RWdh';
+    private $urlAuthenticate = array('Authorization: Basic R0ljc0FxRENvU1hTczk5Y0d0ZGwyOVR3ajBNYTpSZjBrUEFTaHFnbXNGR0gyVUtnTHp4Q3A4RWdh');
     private $grant_type = 'client_credentials';
     private $validity_period = '604800';
+    private $post_data = array('grant_type=client_credentials&validity_period=604800');
+    private $manager;
 
-    public function __construct($token, $expiration)
+    public function __construct(EntityManager $manager)
     {
-        $this->token = $token;
-        $this->expiration = $expiration;
-        $this->$consumerKey = $consumerKey;
-        $this->$consumerSecret = $$consumerSecret;
-        $this->$tokenUrl = $$tokenUrl;
-        $this->$establishUrl = $$establishUrl;
-        $this->$sirenhUrl = $$sirenhUrl;
-        $this->$urlAuthenticate = $$urlAuthenticate;
-        $this->$grant_type = $$grant_type;
-        $this->$validity_period = $$validity_period;
+        $this->manager = $manager;
     }
-    protected function getToken() {
+    public function getTokenResult() {
+        $ch = curl_init();
 
+        curl_setopt($ch, CURLOPT_URL, 'https://api.insee.fr/token');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials&validity_period=604800");
+        curl_setopt($ch, CURLOPT_POST, 1);
+
+        $headers = array();
+        $headers[] = 'Authorization: Basic R0ljc0FxRENvU1hTczk5Y0d0ZGwyOVR3ajBNYTpSZjBrUEFTaHFnbXNGR0gyVUtnTHp4Q3A4RWdh';
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        }
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $jsonResult = json_decode($result, true);
+        return $jsonResult;
     }
-    protected function generateToken(){
+    public function treatdatabase(InseeToken $inseeToken){
 
-        $curlHandle = curl_init();
-        curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 2);
-        curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curlHandle, CURLOPT_POST, 0);
-        curl_setopt($curlHandle, CURLOPT_FAILONERROR, true);
-        curl_setopt($curlHandle, CURLOPT_URL, $tokenUrl);
-        curl_setopt($curlHandle, urlAuthenticate, $urlAuthenticate);
-        curl_setopt($curlHandle, grant_typed, $grant_type);
-        curl_setopt($curlHandle, validity_period, $userAgent);
-        $time_start= microtime(true);
-        $response = curl_exec($curlHandle);
-        $time_end = microtime(true);
-        $execution_time = round(($time_end - $time_start)*1000,0);
+       $token = $this->getToken()['access_token'];
+       $expiration = $this->getToken()['expires_in'];
     }
 }
