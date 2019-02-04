@@ -1,0 +1,42 @@
+
+Identifiants
+outarocht.zakaria@gmail.com
+password :
+Digi_tF13@-d
+
+
+#Pour vider le cache et les logs
+sudo rm -rf var/cache/ 
+
+sudo rm -rf var/logs/
+
+sudo rm -rf var/sessions/
+
+sudo php bin/console cache:clear -env=dev
+
+sudo chown -R www-data var/
+sudo chown -R houssem var/
+
+php bin/console generate:doctrine:entities --no-backup SageBundle
+
+sequence
+php bin/console doctrine:migrations:diff
+php bin/console doctrine:migrations:migrate
+php bin/console doctrine:migrations:execute 20181221112240 --down
+
+
+sudo chmod +x ./phpstorm
+sudo ./phpstorm
+
+git stash list
+git stash pop
+
+gdacosta@digi-paye.com
+$2y$13$WK8FlrGshxmUCDDMgKEiH.IGUxv1/RH9p3E0yj9pEMsfX4wnsTP.m
+
+teissoniere.denise@wanadoo.fr
+
+sudo rm share -rf
+sudo mv digipay digipaye
+sudo chown -R houssem:www-data BAT_AUDIT_CONSEIL
+

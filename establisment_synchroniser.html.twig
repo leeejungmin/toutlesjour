@@ -1,0 +1,105 @@
+{% extends "::app-layout.html.twig" %}
+
+{% block title %}{{ 'title.synchronize_establishments'|trans }}{% endblock %}
+
+{% block pageContent %}
+
+{{ form_start(form) }}
+<div class="portlet light bordered">
+    <div class="portlet-title tabbable-line">
+        <div class="caption">
+            <span class="caption-subject font-dark bold uppercase"> {{ 'Establishments'|trans }}</span>
+        </div>
+        <div class="actions">
+            {{ form_widget(form.synchronize) }}
+        </div>
+    </div>
+    <div class="portlet-body">
+        <div class="table-scrollable">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{{ 'SIRET'|trans }}</th>
+                        <th>{{ 'form.label.address'|trans }}</th>
+                        <th>{{ 'Status'|trans }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for establishment in establishments %}
+                    <tr>
+                        <td> {{ establishment.siret }} </td>
+                        <td>
+                        <address>
+                        <strong>{{ establishment.name|default('NONE') ~ ", " ~ establishment.altName|default('') }}</strong>
+                        <br>
+                        {{
+                            establishment.addressLine1|default('') ~ ", " ~
+                            establishment.addressLine2|default('')
+                        }}
+                        <br>
+                        {{
+                            establishment.addressCity|default('None') ~ ", " ~
+                            establishment.addressZipcode|default('') ~ " (" ~
+                            establishment.addressPostOffice|default('') ~ ")"
+                        }}
+                        </address>
+                        </td>
+                        {% set form_field = 'sync_' ~ establishment.siret %}
+                        {% if attribute(form, form_field) is defined %}
+                        <td>{{ form_widget(attribute(form, form_field)) }} </td>
+                        {% else %}
+                        <td><span class="label label-sm bg-green-jungle"> {{ 'label.up_to_date'|trans }} </span></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+    {{ form_end(form) }}
+{% endblock %}
+{% block pagescript %}
+    {{ parent() }}
+    <script>
+        $( document ).ready(function() {
+            $("#add_company_workflow_sync_api").click(function(e){
+                e.preventDefault();
+                var companysiren = '';
+                var companysiren = $('#add_company_workflow_company_siren').val();
+                var token = '414b4121-0027-3c3d-9b68-db7d72c4f26e';
+                var companysirenwithoutspace = companysiren.replace(/[" "]/g, function (x) {
+                    return '';
+                });
+                $.ajax({
+                    url: 'https://api.insee.fr/entreprises/sirene/V3/siren/'+ companysirenwithoutspace,
+                    beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + token); },
+                    type: 'GET',
+                    success: function(data) {
+                        var companynamewithoutspecialcharacter = data.uniteLegale.periodesUniteLegale[0].denominationUniteLegale.replace(/[[_\W]+]/g, function (x) {
+                            return '';
+                        });
+                        var companydbname = companynamewithoutspecialcharacter.replace(/[" "]/g, function (x) {
+                            return '_';
+                        });
+                        var companyape = data.uniteLegale.periodesUniteLegale[0].activitePrincipaleUniteLegale.replace(/[.]/g, function (x) {
+                            return '';
+                        });
+                        var companysiret = data.uniteLegale.siren + data.uniteLegale.periodesUniteLegale[0].nicSiegeUniteLegale;
+                        $('#add_company_workflow_siren').val(data.uniteLegale.siren);
+                        $('#add_company_workflow_company_ape').val(companyape);
+                        $('#add_company_workflow_company_name').val(companynamewithoutspecialcharacter);
+                        $('#add_company_workflow_company_sageDbName').val(companydbname);
+                        $('#add_company_workflow_company_siret').val(companysiret);
+                        // Decode and show the returned data nicely.
+                    },
+                    error: function(header) {
+                        $('#companyapierrormessage').text('Le code Siren n\'est pas valide !');
+                    }
+                });
+            });
+
+        })
+    </script>
+{% endblock %}

@@ -4,48 +4,66 @@
 namespace AppBundle\Services;
 
 use SageBundle\Entity\InseeToken;
+use \Doctrine\ORM\EntityManager;
 
 class InseeTokenManager
 {
-    private $consumerKey    = 'GIcsAqDCoSXSs99cGtdl29Twj0Ma';
-    private $consumerSecret	= 'Rf0kPAShqgmsFGH2UKgLzxCp8Ega';
-    private $tokenUrl	    = 'https://api.insee.fr/token';
-    private $establishUrl   = 'https://api.insee.fr/entreprises/sirene/V3/siret?q=siren:632013843 ';
-    private $sirenhUrl	    = 'https://api.insee.fr/entreprises/sirene/V3/siren/632013843 ';
-    private $urlAuthenticate = array('Authorization: Basic R0ljc0FxRENvU1hTczk5Y0d0ZGwyOVR3ajBNYTpSZjBrUEFTaHFnbXNGR0gyVUtnTHp4Q3A4RWdh');
-    private $grant_type = 'client_credentials';
-    private $validity_period = '604800';
-    private $post_data = array('grant_type=client_credentials&validity_period=604800');
     private $manager;
-
     public function __construct(EntityManager $manager)
     {
         $this->manager = $manager;
     }
-    public function getTokenResult() {
-        $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, 'https://api.insee.fr/token');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials&validity_period=604800");
-        curl_setopt($ch, CURLOPT_POST, 1);
+    public function generateToken() {
+        $curlgenerate = curl_init();
+
+        curl_setopt($curlgenerate, CURLOPT_URL, 'https://api.insee.fr/token');
+        curl_setopt($curlgenerate, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curlgenerate, CURLOPT_POSTFIELDS, "grant_type=client_credentials&validity_period=604800");
+        curl_setopt($curlgenerate, CURLOPT_POST, 1);
 
         $headers = array();
         $headers[] = 'Authorization: Basic R0ljc0FxRENvU1hTczk5Y0d0ZGwyOVR3ajBNYTpSZjBrUEFTaHFnbXNGR0gyVUtnTHp4Q3A4RWdh';
         $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curlgenerate, CURLOPT_HTTPHEADER, $headers);
 
-        $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
+        $result = curl_exec($curlgenerate);
+        if (curl_errno($curlgenerate)) {
+            echo 'Error:' . curl_error($curlgenerate);
         }
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $httpCode = curl_getinfo($curlgenerate, CURLINFO_HTTP_CODE);
         $jsonResult = json_decode($result, true);
         return $jsonResult;
     }
-    public function treatdatabase(InseeToken $inseeToken){
 
-       $token = $this->getToken()['access_token'];
-       $expiration = $this->getToken()['expires_in'];
+
+    public function getToken(InseeToken $inseeToken){
+        $currentdate = (new \DateTime())->format('Y-m-d H:i:s');
+        $inseerespo= $this->manager->getRepository('SageBundle:InseeToken')->findOneBy(
+            array(), array('id' => 'DESC')
+            );
+        if (!$inseerespo) {
+                $inseerespo = new InseeToken();
+                $inseerespo->setExpiration(null);
+            }
+        //create token
+        if(date_format($inseerespo->getExpiration(),"Y-m-d H:i:s") < $currentdate || $inseerespo->getExpiration() == null ){
+            //call function for getting token
+            $gettokenjson = $this->generateToken();
+            $token = $gettokenjson['access_token'];
+            $expirationin = $gettokenjson['expires_in'];
+            $generationdate = new \DateTime();
+            $modifiedtime = '+'.strval($expirationin).' second';
+            $generationdate->modify($modifiedtime);
+            $generationdate->modify('-5 minute');
+            $inseeToken->setToken($token);
+            $inseeToken->setExpiration(date_format($generationdate,"Y-m-d H:i:s"));
+            $inseeToken->setGeneratedAt($generationdate);
+            return $gettokenjson;
+      }else{
+            //if it is ok, get token from database
+            $fortokenarray = array('access_token' => $inseerespo->getToken() );
+            return $fortokenarray;
+        }
     }
 }
