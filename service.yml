@@ -1,0 +1,783 @@
+# Learn more about services, parameters and containers at
+# http://symfony.com/doc/current/book/service_container.html
+parameters:
+#    parameter_name: value
+
+services:
+#    service_name:
+#        class: AppBundle\Directory\ClassName
+#        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+
+services:
+## Misc: services that may change
+    app.hasher:
+        class: AppBundle\Services\Hasher
+    app.helper:
+        class: AppBundle\Services\Helper
+        arguments:
+            - "@security.token_storage"
+            - "@security.authorization_checker"
+            - "@request_stack"
+            - "@router"
+            - "@doctrine.orm.entity_manager"
+    app.counter:
+        class: AppBundle\Services\Counter
+        arguments:
+            - "@sage.repository.employee"
+            - "@sage.repository.employee_changelog"
+            - "@sage.repository.employee_event"
+            - "@sage.repository.employee_variable"
+            - "@sage.repository.employee_contract"
+            - "@sage.repository.employee_file"
+            - '%sage_event_type_leaves%'
+            - '%sage_event_type_absences%'
+    app.mail_sender:
+        class: AppBundle\Services\MailSender
+        arguments:
+            - "%mailer_sender%"
+            - "@mailer"
+            - "@templating"
+            - "@vich_uploader.storage"
+    app.datatable:
+        class: AppBundle\Services\Datatable
+        arguments:
+            - "@router"
+            - "@doctrine.orm.entity_manager"
+            - "@translator"
+    app.siren_api:
+        class: AppBundle\Services\SirenApi
+        arguments:
+            - "@sage.repository.company"
+            - "@sage.repository.company_establishment"
+            - "@sage.repository.reference_ape"
+    app.insee_token:
+            class: AppBundle\Services\InseeTokenManager
+            arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@sage.repository.company_establishment"
+    app.holidays:
+        class: AppBundle\Services\Holidays
+        arguments:
+            - "%holidays%"
+            - "%holidays-zoning%"
+
+    sage.change_resolver:
+        class: SageBundle\Services\ChangeResolver
+        arguments:
+            - "@doctrine.orm.entity_manager"
+
+## Controllers
+#    app.controller.downloader:
+#        class: AppBundle\Controller\DownloaderController
+#        arguments:
+#            - "@liip_imagine.data.manager"
+#            - "@liip_imagine.filter.manager"
+#            - "@liip_imagine.cache.manager"
+
+## Managers
+    app.manager.alert:
+        class: AppBundle\Services\AlertManager
+        arguments:
+            - "@sage.repository.employee_contract"
+            - "@sage.repository.people"
+    app.manager.employee:
+        class: AppBundle\Services\EmployeeManager
+        arguments:
+            - "@app.manager.user"
+            - "@app.manager.user_access"
+            - "@app.manager.file_request"
+            - "@doctrine.orm.entity_manager"
+            - "%sage_nationality_code_exempt_of_resident_permit%"
+            - "@event_dispatcher"
+    app.manager.event:
+        class: AppBundle\Services\EventManager
+        arguments:
+            - "@app.mail_sender"
+            - "@doctrine.orm.entity_manager"
+            - "@validator"
+            - "@event_dispatcher"
+            - "%sage_event_type_ignore_dispatch%"
+            - "%sage_event_type_ignore_overlap%"
+            - "@app.user_type_manager"
+            - '%config_notif_payadmin_event_code%'
+            - "@router"
+            - "@translator"
+    app.manager.counter:
+        class: AppBundle\Services\CounterManager
+        arguments:
+            - "@sage.repository.company_event"
+            - "@sage.repository.employee_event"
+            - "@sage.repository.employee_leavecounter"
+            - '%sage_event_type_leaves%'
+            - '%sage_event_type_absences%'
+            - '%sage_event_type_hours%'
+    app.manager.form:
+        class: AppBundle\Services\FormManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@form.factory"
+            - "@app.manager.variable"
+            - "%sage_healthcare%"
+    app.manager.change:
+        class: AppBundle\Services\ChangeLogManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - '@sage.change_resolver'
+            - "@event_dispatcher"
+    app.manager.variable:
+        class: AppBundle\Services\VariableManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@event_dispatcher"
+            - '%sage_type_variable%'
+            - '%sage_section_variable_list%'
+    app.manager.file_request:
+        class: AppBundle\Services\FileRequestManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@event_dispatcher"
+            - '%sage_section_variable_need_proof%'
+    app.manager.payslip:
+        class: AppBundle\Services\PaySlipManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@event_dispatcher"
+            - "@validator"
+            - "%sage_mount_folder%"
+    app.manager.closure:
+        class: AppBundle\Services\ClosureManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@event_dispatcher"
+    app.manager.user_access:
+        class: AppBundle\Services\UserAccessManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@event_dispatcher"
+    app.manager.user:
+        class: AppBundle\Services\UserManager
+        arguments:
+            - "@security.authorization_checker"
+            - "@security.token_storage"
+            - "@fos_user.util.token_generator"
+            - "@fos_user.user_manager"
+            - "@sage.repository.employee_team"
+            - "@event_dispatcher"
+    app.manager.file:
+        class: AppBundle\Services\FileManager
+        arguments:
+            - "@liip_imagine.data.manager"
+            - "@liip_imagine.filter.manager"
+            - "@liip_imagine.cache.manager"
+    app.manager.contract:
+        class: AppBundle\Services\ContractManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@event_dispatcher"
+    app.manager.team:
+        class: AppBundle\Services\TeamManager
+        arguments:
+            - "@sage.repository.employee"
+            - "@sage.repository.employee_team"
+            - "@app.repository.user"
+    sage.manager.extract:
+        class: SageBundle\Services\ExtractManager
+        arguments:
+            - "%sage_extract_mapping%"
+            - "@sage.serializer.digipay"
+    sage.manager.export:
+        class: SageBundle\Services\ExportManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@validator"
+            - "%sage_mapping%"
+            - "%sage_normalizer%"
+            - "@logger"
+    sage.manager.sync:
+        class: SageBundle\Services\SyncManager
+        arguments:
+            - "@doctrine.dbal.connection_factory"
+            - "@doctrine.orm.entity_manager"
+            - "%sage_database_host%"
+            - "%sage_database_port%"
+            - "%sage_database_user%"
+            - "%sage_database_password%"
+            - "%sage_section_variable_list%"
+    app.manager.variable.custom:
+             class: AppBundle\Services\CustomvariableManager
+             arguments:
+                 - "@doctrine.orm.entity_manager"
+                 - "@event_dispatcher"
+
+## Vich
+    app.directory_namer.employee_file:
+        class: AppBundle\Naming\EmployeeFileDirectoryNamer
+    app.directory_namer.company_file:
+        class: AppBundle\Naming\CompanyFileDirectoryNamer
+    app.namer.employee_file:
+        class: AppBundle\Naming\EmployeeFileNamer
+## Menus
+    app.menu_builder:
+        class: AppBundle\Menu\Builder
+        arguments:
+            - "@knp_menu.factory"
+            - "@security.authorization_checker"
+            - "@app.manager.user"
+            - "@app.helper"
+            - "@app.counter"
+            - "%employee_hide_calendar_by_company%"
+            - "@doctrine.orm.entity_manager"
+            - "@security.token_storage"
+            - "@app.user_type_manager"
+            - "@request_stack"
+        tags:
+            - { name: knp_menu.menu_builder, method: createCompanyNameMenu, alias: companyname }
+            - { name: knp_menu.menu_builder, method: createAdminMenu, alias: admin }
+            - { name: knp_menu.menu_builder, method: createWhitelabelMenu, alias: whitelabel }
+            - { name: knp_menu.menu_builder, method: createWorkflowMenu, alias: workflow }
+            - { name: knp_menu.menu_builder, method: createCompanyMenu, alias: company }
+            - { name: knp_menu.menu_builder, method: createUserMenu, alias: user }
+            - { name: knp_menu.menu_builder, method: createDRHEmployeeMenu, alias: drhemployee }
+            - { name: knp_menu.menu_builder, method: createParametersCollapseMenu, alias: companyparam }
+            - { name: knp_menu.menu_builder, method: createDRHEmployeeActionsMenu, alias: drhemployeeactions }
+            - { name: knp_menu.menu_builder, method: createEmployeeMenu, alias: employee }
+            - { name: knp_menu.menu_builder, method: followCabinet, alias: followcabinet }
+## Auths
+    app.authentication.handler:
+        class: AppBundle\Security\AuthenticationHandler
+        arguments:
+            - "@router"
+            - "@app.helper"
+## Form Types
+    app.form.extension.base_type:
+            class: AppBundle\Form\Extension\BaseTypeExtension
+            tags:
+                - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\FormType }
+    sage.form.type.company_event:
+        class: SageBundle\Form\Company\EventType
+        arguments: ["%sage_event_type_company%"]
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_edit_pay:
+        class: SageBundle\Form\EmployeeEditPayType
+        arguments:
+            - "@translator"
+            - "@app.manager.form"
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_workflow:
+        class: SageBundle\Form\Workflow\EmployeeWorkflowType
+        arguments:
+            - "@translator"
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_event:
+        class: SageBundle\Form\Employee\EventType
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_all_event:
+        class: SageBundle\Form\Employee\Event\AllEventType
+        arguments: ["%sage_event_type_default%"]
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_event_leave:
+        class: SageBundle\Form\Employee\Event\LeaveType
+        arguments: ["%sage_event_type_leaves%"]
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_event_absence:
+        class: SageBundle\Form\Employee\Event\AbsenceType
+        arguments: ["%sage_event_type_absences%"]
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_event_hour:
+        class: SageBundle\Form\Employee\Event\HourType
+        arguments: ["%sage_event_type_hours%"]
+        tags:
+            - { name: form.type }
+    sage.form.type.sage_reference:
+        class: SageBundle\Form\SageReferenceEntityType
+        arguments:
+            - "@doctrine.orm.entity_manager"
+        tags:
+            - { name: form.type }
+    sage.form.type.employee_jobsection:
+        class: SageBundle\Form\EmployeeJobSectionType
+        arguments:
+            - "@doctrine.orm.entity_manager"
+        tags:
+            - { name: form.type }
+
+    sage.form.type.people_edit:
+        class: SageBundle\Form\PeopleEditType
+        arguments:
+            - "@sage.subscriber.employee_changelog"
+        tags:
+            - { name: form.type }
+    sage.form.type.people_registration:
+        class: SageBundle\Form\People\RegistrationType
+        arguments:
+            - "@security.authorization_checker"
+            - "@sage.repository.reference_departments"
+        tags:
+            - { name: form.type }
+
+## Export/Import Services
+    sage.export.query:
+        class: SageBundle\Services\ExportQuery
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "%sage%"
+    sage.export.text:
+        class: SageBundle\Services\ExportText
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "%sage%"
+    sage.import.query:
+        class: SageBundle\Services\ImportQuery
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "%sage%"
+            - "@validator"
+    sage.import.text:
+        class: SageBundle\Services\ImportText
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "%sage%"
+## Voters
+    app.user_access_voter:
+        class: AppBundle\Security\UserAccessVoter
+        arguments: ['@security.access.decision_manager', '@app.repository.user_access', '@sage.repository.employee_contract']
+        tags:
+            - { name: security.voter }
+        public: false
+    app.white_label_voter:
+        class: AppBundle\Security\WhiteLabelVoter
+        arguments: ['@security.access.decision_manager']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.company_voter:
+        class: SageBundle\Security\CompanyVoter
+        arguments: ['@security.access.decision_manager']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.company_file_voter:
+        class: SageBundle\Security\CompanyFileVoter
+        arguments: ['@security.access.decision_manager']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.employee_voter:
+        class: SageBundle\Security\EmployeeVoter
+        arguments: ['@security.access.decision_manager', '@sage.repository.employee_team']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.employee_file_voter:
+        class: SageBundle\Security\EmployeeFileVoter
+        arguments: ['@security.access.decision_manager']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.event_voter:
+        class: SageBundle\Security\EventVoter
+        arguments: ['@security.access.decision_manager', '@sage.repository.company_closure']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.contract_voter:
+        class: SageBundle\Security\ContractVoter
+        arguments: ['@security.access.decision_manager', '@sage.repository.company_closure', '%sage_contract_type_end_date%']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.changelog_voter:
+        class: SageBundle\Security\ChangeLogVoter
+        arguments: ['@security.access.decision_manager']
+        tags:
+            - { name: security.voter }
+        public: false
+    sage.payslipmodel_voter:
+        class: SageBundle\Security\PaySlipModelVoter
+        arguments: ['@security.access.decision_manager']
+        tags:
+            - { name: security.voter }
+        public: false
+## Listeners
+    app.listener.security:
+        class: AppBundle\EventListener\SecurityListener
+        arguments:
+            - "@security.token_storage"
+            - "@security.access.decision_manager"
+            - "@router"
+            - "@doctrine.orm.entity_manager"
+        tags:
+            - { name: 'kernel.event_listener', event: kernel.request }
+    app.listener.upload:
+        class: AppBundle\EventListener\UploadListener
+        arguments:
+            - "@liip_imagine.cache.manager"
+            - "@vich_uploader.storage"
+        tags:
+            - { name: kernel.event_listener, event: vich_uploader.pre_remove, method: onPreRemove }
+    sage.listener.security:
+        class: SageBundle\EventListener\SecurityListener
+        arguments:
+            - "@security.token_storage"
+            - "@security.access.decision_manager"
+        tags:
+            - { name: 'kernel.event_listener', event: kernel.controller, priority: -1 }
+## Subscribers
+    app.subscriber.decision:
+        class: AppBundle\EventListener\DecisionSubscriber
+        arguments:
+            - "@security.access.decision_manager"
+        tags:
+            - { name: 'kernel.event_subscriber' }
+    app.subscriber.employee_pay_slip:
+        class: AppBundle\EventListener\EmployeePaySlipSubscriber
+        arguments:
+            - "@sage.repository.schedule_model"
+        tags:
+            - { name: 'kernel.event_subscriber' }
+    app.subscriber.notice:
+        class: AppBundle\EventListener\NoticeSubscriber
+        arguments:
+            - "@app.mail_sender"
+            - "@router"
+            - '@translator'
+            - "@app.repository.user"
+            - "@app.manager.variable"
+            - "@app.manager.team"
+            - '@app.manager.counter'
+            - '%counter_email_event_code%'
+        tags:
+            - { name: 'kernel.event_subscriber' }
+    app.subscriber.password_reset:
+        class: AppBundle\EventListener\PasswordResetSubscriber
+        arguments:
+            - "@router"
+        tags:
+            - { name: 'kernel.event_subscriber' }
+    sage.subscriber.employee_leavecounter:
+        class: SageBundle\EventListener\LeaveCounterSubscriber
+        arguments:
+            - '@doctrine.orm.entity_manager'
+        tags:
+            - { name: 'kernel.event_subscriber' }
+    sage.subscriber.employee_changelog:
+        class: SageBundle\EventListener\AddEmployeeChangeLogSubscriber
+        arguments:
+            - '@sage.repository.employee_changelog'
+            - '@sage.change_resolver'
+            - '@translator'
+    sage.subscriber.doctrine.employee_change:
+        class: SageBundle\EventListener\EmployeeChangeSubscriber
+        arguments:
+            - "@security.token_storage"
+            - "@event_dispatcher"
+        tags:
+            - { name: doctrine.event_subscriber, connection: default }
+    sage.subscriber.doctrine.employee_pay_slip:
+        class: SageBundle\EventListener\EmployeePaySlipSubscriber
+        arguments:
+            - "@event_dispatcher"
+        tags:
+            - { name: doctrine.event_subscriber, connection: default }
+## Repository
+    app.repository.user:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - AppBundle\Entity\User
+    app.repository.user_access:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - AppBundle\Entity\UserAccess
+    sage.repository.reference_ape:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Reference\Ape
+    sage.repository.reference_departments:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Reference\Department
+    sage.repository.company:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Company
+    sage.repository.company_closure:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Company\Closure
+    sage.repository.company_establishment:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Company\Establishment
+    sage.repository.company_event:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Company\Event
+    sage.repository.employee:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee
+    sage.repository.employee_event:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee\Event
+    sage.repository.employee_variable:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee\Variable
+    sage.repository.employee_changelog:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee\ChangeLog
+    sage.repository.employee_contract:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee\Contract
+    sage.repository.employee_leavecounter:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee\LeaveCounter
+    sage.repository.employee_file:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee\File
+    sage.repository.employee_team:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Employee\Team
+    sage.repository.people:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\People
+    sage.repository.schedule_model:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - SageBundle\Entity\Schedule\Model
+
+## Validators
+    sage.validator.company_closure:
+        class: SageBundle\Validator\Constraints\Company\ClosureValidator
+        arguments:
+            - '@app.manager.closure'
+        tags:
+            - { name: validator.constraint_validator }
+    sage.validator.company_event:
+        class: SageBundle\Validator\Constraints\Company\EventValidator
+        arguments:
+            - '@app.manager.event'
+        tags:
+            - { name: validator.constraint_validator }
+    sage.validator.employee_event:
+        class: SageBundle\Validator\Constraints\Employee\EventValidator
+        arguments:
+            - '@sage.repository.employee_event'
+            - '@sage.repository.employee_contract'
+            - '@app.manager.counter'
+            - '@app.manager.event'
+            - '%sage_event_type_leaves%'
+            - '%sage_event_type_absences%'
+            - '%sage_event_type_hours%'
+            - '%sage_event_type_absences_file%'
+        tags:
+            - { name: validator.constraint_validator }
+    sage.validator.employee_contract:
+        class: SageBundle\Validator\Constraints\Employee\ContractValidator
+        arguments:
+            - '@sage.repository.employee_contract'
+            - '@sage.repository.company_closure'
+            - '%sage_contract_type_end_date%'
+            - '%sage_contract_notice_type%'
+        tags:
+            - { name: validator.constraint_validator }
+    sage.validator.employee_variable:
+        class: SageBundle\Validator\Constraints\Employee\VariableValidator
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+            - '@sage.repository.employee_variable'
+            - '@sage.repository.company_closure'
+        tags:
+            - { name: validator.constraint_validator }
+    sage.validator.people_registration:
+        class: SageBundle\Validator\Constraints\People\RegistrationValidator
+        arguments:
+            - '%sage_nationality_code_exempt_of_resident_permit%'
+        tags:
+            - { name: validator.constraint_validator }
+
+## Twigs
+#    twig.extension.date:
+#       class: Twig_Extensions_Extension_Date
+#       tags:
+#            - { name: twig.extension }
+    app.twig.whitelabel_extension:
+        class: AppBundle\Twig\WhiteLabelExtension
+        arguments:
+            - "@app.helper"
+            - "@router"
+        public: false
+        tags:
+            - { name: twig.extension }
+    app.twig.intl_date_extension:
+        class: AppBundle\Twig\IntlDateExtension
+        public: false
+        tags:
+            - { name: twig.extension }
+    sage.twig.sage_extension:
+        class: SageBundle\Twig\SageExtension
+        arguments:
+            - "@sage.repository.employee"
+            - "@sage.repository.employee_file"
+            - "@sage.change_resolver"
+            - "@app.manager.variable"
+            - "@app.manager.team"
+            - "@translator"
+            - "@router"
+        public: false
+        tags:
+            - { name: twig.extension }
+## Imagine
+    app.imagine.binary.loader.whitelabel_icon:
+        class: AppBundle\Imagine\Binary\Loader\AbsoluteLoader
+        arguments:
+            - "@liip_imagine.mime_type_guesser"
+            - "@liip_imagine.extension_guesser"
+            - "%kernel.root_dir%/../var/whitelabel/files/"
+            - "%kernel.root_dir%/../web/favicon.ico"
+        tags:
+            - { name: "liip_imagine.binary.loader", loader: whitelabel_icon_loader }
+    app.imagine.binary.loader.whitelabel:
+        class: AppBundle\Imagine\Binary\Loader\AbsoluteLoader
+        arguments:
+            - "@liip_imagine.mime_type_guesser"
+            - "@liip_imagine.extension_guesser"
+            - "%kernel.root_dir%/../var/whitelabel/files/"
+            - "%kernel.root_dir%/../web/img/logo-white.svg"
+        tags:
+            - { name: "liip_imagine.binary.loader", loader: whitelabel_loader }
+    app.imagine.cache.resolver.whitelabel_path:
+        class: AppBundle\Imagine\Cache\Resolver\AbsolutePathResolver
+        arguments:
+            - "@filesystem"
+            - "%kernel.root_dir%/../var/media/cache"
+            - "/whitelabels/"
+        tags:
+            - { name: "liip_imagine.cache.resolver", resolver: whitelabel_cache }
+    app.imagine.binary.loader.avatar:
+        class: AppBundle\Imagine\Binary\Loader\AbsoluteLoader
+        arguments:
+            - "@liip_imagine.mime_type_guesser"
+            - "@liip_imagine.extension_guesser"
+            - "%kernel.root_dir%/../var/employee/files/"
+            - "%kernel.root_dir%/../web/img/avatar.png"
+        tags:
+            - { name: "liip_imagine.binary.loader", loader: avatar_loader }
+    app.imagine.cache.resolver.avatar_path:
+        class: AppBundle\Imagine\Cache\Resolver\AbsolutePathResolver
+        arguments:
+            - "@filesystem"
+            - "%kernel.root_dir%/../var/media/cache"
+            - "/avatars/"
+        tags:
+            - { name: "liip_imagine.cache.resolver", resolver: avatar_cache }
+
+# Serializer
+    sage.serializer.normalizer.object:
+        class: Symfony\Component\Serializer\Normalizer\ObjectNormalizer
+    sage.serializer.normalizer.digipay:
+        class: SageBundle\Serializer\Normalizer\DigiPayNormalizer
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+            - '@validator'
+            - '%digipay_normalizer%'
+    sage.serializer.encoder.csv:
+        class: Symfony\Component\Serializer\Encoder\CsvEncoder
+        arguments:
+            0: ','
+    sage.serializer.csv:
+        class: Symfony\Component\Serializer\Serializer
+        arguments:
+            0: ["@sage.serializer.normalizer.object"]
+            1: ["@sage.serializer.encoder.csv"]
+    sage.serializer.digipay:
+        class: Symfony\Component\Serializer\Serializer
+        arguments:
+            0: ["@sage.serializer.normalizer.digipay"]
+            1: ["@sage.serializer.encoder.csv"]
+
+    app.custom_fos_user_mailer:
+        class: DigiPayUserBundle\Mailer\Mailer
+        arguments:
+            - '@mailer'
+            - "@router"
+            - "@templating"
+            -
+                confirmation.template: "%fos_user.registration.confirmation.template%"
+                resetting.template: "%fos_user.resetting.email.template%"
+                from_email:
+                  confirmation: "%fos_user.registration.confirmation.from_email%"
+                  resetting: "%fos_user.resetting.email.from_email%"
+
+#Get Connected User Type
+    app.user_type_manager:
+        class: AppBundle\Services\UserTypeManager
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@security.token_storage"
+
+#OCR Mobile
+#    app.ocrmobile:
+#        class: AppBundle\Services\OcrMobileManager
+#        arguments:
+#            - "@security.token_storage"
+#            - "@security.authorization_checker"
+#            - "@doctrine.orm.entity_manager"
+#            - "%ocrmobile%"
+
+    #Imports (Absences)
+    app.imports:
+        class: AppBundle\Services\Imports
+        arguments:
+            - "@security.token_storage"
+            - "@security.authorization_checker"
+            - "@doctrine.orm.entity_manager"
+            - "%imports_directory_temp%"
+            - "%imports_file_size%"
+            - "@session"
+            - "@translator.default"
+            - "@app.helper"
+            - "%imports_employee_ocr_directory%"
+            - "%imports_ocr_extensions%"
+            - "@app.manager.form"
+
+#Louis21 generate authentification token after connection..
+    louis21.authentification.token:
+        class: Louis21Bundle\Services\Authentification
+        arguments:
+            - "@security.token_storage"
+            - "@router"
+            - "@doctrine.orm.entity_manager"
+            - "@app.helper"

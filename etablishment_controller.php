@@ -5,8 +5,14 @@
      */
     public function synchronizeAction(Company $company, Request $request)
     {
-        $establishments = $this->get('app.siren_api')->findEstablishmentsBySiren($company->getSiren());
-        $establishmentsLastUpdate = $this->get('app.siren_api')
+        //get token
+        $InseeToken = new InseeToken();
+        $apitoken = $this->get('app.insee_token')->getToken($InseeToken)[ "access_token" ];
+        $apiurl= $this->container->getParameter('apiSirene')['urlsiret'];
+
+        $establishments = $this->get('app.insee_token')->findEstablishmentsBySiren($company->getSiren(), $apiurl, $apitoken );
+        dump($establishments);die;
+        $establishmentsLastUpdate = $this->get('app.insee_token')
             ->getEstablishmentsLastUpdateBySirets(array_keys($establishments));
         $form = $this->createForm(EstablishmentSyncType::class, array(
             'establishments' => $establishments,
