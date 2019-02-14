@@ -1,0 +1,224 @@
+<?php
+
+namespace AppBundle\Controller\WhiteLabel;
+
+use AppBundle\Entity\WhiteLabel;
+use SageBundle\Entity\Company;
+use SageBundle\Repository\CompanyRepository;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use SageBundle\Security\CompanyVoter;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\Finder\Finder;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use DateTime;
+
+/**
+ * @Route("/dashboard")
+ * @Security("is_granted('DIGIPAYE_WHITELABEL_EDIT', whitelabel)")
+ */
+class DashboardController extends Controller
+{
+    /**
+     * @Route("/{whitelabel}/whitebrand/{start}", defaults={"start"=null})
+     * @ParamConverter("start", options={"format": "Y-m-d"})
+     */
+    public function indexAction(WhiteLabel $whitelabel, \DateTime $start = null)
+    {
+        if($start){
+        //User choosed a specific month
+        $interval = $this->get('app.helper')->getDateInterval($start, 'month');
+        $dateClosure = $start->format("Y-m-01 00:00:00");
+        $dateEndCounters = clone $start;
+        $dateEndCounters = $dateEndCounters->modify("last day of ".$dateEndCounters->format("F Y")." 23:59:59 ");
+        $dateForInterval = $start->format("Y-m-01");
+        $dateYearMonthForFolder= $start->format("Y/m");
+        $dateYear= $start->format("Y");
+        }else{
+        //When we do not have the date
+        //$interval = $this->get('app.helper')->getActualClosureInterval($whitelabel);
+        $intervalStart = new DateTime();
+        $intervalEnd = new DateTime();
+        $interval['start'] = $intervalStart->modify("first day");
+        $interval['end'] = $intervalEnd->modify("last day");
+        $dateClosure = date("Y-m-01 00:00:00", strtotime("now"));
+        $dateForInterval = date("Y-m-01", strtotime("now"));
+        $dateYearMonthForFolder = date("Y/m", strtotime("now"));
+        $dateEndCounters    = new \DateTime('last day of this month 23:59:59');
+        $dateYear= date("Y", strtotime("now"));
+    }
+
+        $start = $interval['start'];
+
+        $manager = $this->getDoctrine()->getManager();
+        $companys =  $manager->getRepository('SageBundle:Company')->getComapniesByWhiteBrand($whitelabel);
+        $datas = array();
+        $companyPreclosureHistory = $manager->getRepository("SageBundle:Company\PreClosureHistory");
+
+        $employeeRepo = $this->getDoctrine()->getRepository('SageBundle:Employee');
+        $eventRepo = $this->getDoctrine()->getRepository('SageBundle:Employee\Event');
+        $paySlipManager = $this->get('app.manager.payslip');
+
+        $interval = $this->get('app.helper')->getDateInterval($dateForInterval, 'month');
+        $intervalYear = $this->get('app.helper')->getDateInterval($dateYear, 'year');
+        $dateformatforPreclosure = new DateTime($dateClosure);
+        foreach ($companys as $company){
+            $localData = array();
+            $localData["id"] = $company->getId();
+            $localData["name"] = $company->getName();
+            $localData["siret"] = $company->getSiret();
+            $companyPreclosureHistorys = $companyPreclosureHistory->findOneBy(array(
+                'company' => $company,
+                'periodStart' => $dateformatforPreclosure,
+            ), array(
+                'createdAt' => 'DESC'
+            ));
+            $localData["PreclosureHistory"] = $companyPreclosureHistorys;
+            //$localData["siren"] = $company->getName();
+
+            $employeesCountYear =   $manager->getRepository('SageBundle:Employee')->countActiveByCompany($company, $intervalYear["start"], $intervalYear["end"]);
+            $localData["number_salarys"] = $employeesCountYear;
+            $closure =  $manager->getRepository('SageBundle:Company\Closure')
+                ->getOneByCompanyAndPeriodStart($company,$dateClosure);
+
+            $employees = $this->get('app.manager.user')->getManagedEmployeeByCompany($company);
+            /*$pengingEvents = $eventRepo->findPendingEventByCompanyByCodesByEmployees($company,
+                array_merge($this->getParameter('sage_event_type_leaves'),
+                    $this->getParameter('sage_event_type_absences')),
+                $employees
+            );
+            $pengingEvents = $eventRepo->findPendingEventByCompanyByCodesByEmployees($company,
+                    $this->getParameter('sage_whitebrand_board_event'),
+                    $employees
+            );
+            $localData["pendingEvents"] = count($pengingEvents);
+            */
+
+            /*$allEvents = $eventRepo->findAllEventByCompanyByCodesByEmployeesByDates($company,
+                array_merge($this->getParameter('sage_event_type_leaves'),
+                    $this->getParameter('sage_event_type_absences')),
+                $employees,
+                $interval["start"]->format("Y-m-d"),
+                $interval["end"]->format("Y-m-d")
+            );*/
+            $allEvents = $eventRepo->findAllEventByCompanyByCodesByEmployeesByDates($company,
+                $this->getParameter('sage_whitebrand_board_event'),
+                $employees,
+                $interval["start"]->format("Y-m-d"),
+                $interval["end"]->format("Y-m-d")
+            );
+
+            $localData["allEvents"] = count($allEvents);
+
+            //Get the closure status
+            $localData["closure"] = $closure;
+
+            $localData["counters"] = $this->get('app.counter')->countGlobalsByCompanyByPeriod($company,
+                $dateClosure,
+                $dateEndCounters);
+
+            //Get counter for the WhiteBrand Dashboard
+            $localData["counters"]["employees"]["newcomerByPeriod"] = $employeeRepo->countNewcomerByCompanyByInterval($company, $dateClosure, $dateEndCounters);
+
+            //Check if the bulletin file are available
+            $localData["bulletin"] = null;
+            $stateFolder = $paySlipManager->getPaySlipStatesFolderWhiteBrandDashboard($company, $dateYearMonthForFolder);
+            if ($paySlipManager->canAccessMount($stateFolder)) {
+                $finder = new Finder();
+                $files = iterator_to_array( $finder->files()->in($stateFolder)->name('/^(.*)_BUL|BULLETINS_(.*)\.pdf$/i') );
+                $forfile = array();
+                foreach ($files as $file) {
+                    array_push($forfile,$file);
+                }
+                if($files && $forfile[0]){
+                    $localData["bulletin"] =  strtotime(date("Y-m-d H:i:s", $forfile[0]->getMTime()));
+                }
+            }
+           /* $nowTime = new DateTime();
+            $date1=date_create("2019-02-13 18:00:00");
+            $diff=date_diff($nowTime,$date1);
+            dump($diff->format('%d Day'));
+            dump(intval($diff->format('%d')));
+            dump(gettype(intval($diff->format('%d'))));die;
+            //Check if the etat file are available*/
+            $localData["etat"] = null;
+            if ($paySlipManager->canAccessMount($stateFolder)) {
+                $finder = new Finder();
+                $files = iterator_to_array( $finder->files()->in($stateFolder)->name('/^(.*)_ERC|ETAT_DES_CHARGES_(.*)\.pdf$/i') );
+                $forfile = array();
+                foreach ($files as $file) {
+                    array_push($forfile,$file);
+                }
+                if($files && $forfile[0]){
+                    $localData["etat"] = strtotime(date("Y-m-d H:i:s", $forfile[0]->getMTime()));
+                    $nowTime = new DateTime();
+//make condition for etat background
+                    $diff=date_diff($nowTime,$localData["etat"]);
+                    if(intval($diff->format('%d'))<1){
+                        $localData["etatcondition"] = 'lessthan1day';
+                    }elseif(intval($diff->format('%d'))==1 || intval($diff->format('%d'))<2){
+                        $localData["etatcondition"] = 'lessthan2day';
+                    }else{
+                        $localData["etatcondition"] = 'morethan2day';
+                    }
+                }
+            }
+            $datas []=$localData;
+        }
+
+        return $this->render('AppBundle:Company/Dashboard:whitebrand.html.twig', array(
+            'companys' => $datas,
+            'whitelabel' => $whitelabel,
+            'start' => $start
+        ));
+    }
+
+    /**
+     * @Route("/{whitelabel}/graphpie/")
+     */
+    public function graphpieAction(WhiteLabel $whitelabel,Request $request)
+    {
+        $manager = $this->getDoctrine()->getManager();
+        $companys =  $manager->getRepository('SageBundle:Company')->getComapniesByWhiteBrand($whitelabel);
+
+        $status0 = 0;
+        $status1 = 0;
+        $status2 = 0;
+        $status3 = 0;
+        foreach ($companys as $company){
+            $localData = array();
+            $date= date("01-m-Y",strtotime("-1 month"));
+            $closure =  $manager->getRepository('SageBundle:Company\Closure')
+                ->getOneByCompanyAndDate($company,$date);
+
+                switch ($closure->getStatus()) {
+                    case 0:
+                        $status0++;
+                    break;
+                    case 1:
+                        $status1++;
+                    break;
+                    case 2:
+                        $status2++;
+                     break;
+                    case 3:
+                        $status3++;
+                        break;
+                }
+        }
+
+        $json[] = array("Inactive",(int)$status0);
+        $json[] = array("Validée",(int)$status1);
+        $json[] = array("Création des bulletins en cours",(int)$status2);
+        $json[] = array("Finie",(int)$status3);
+
+        $response1 = new Response(json_encode($json));
+        $response1->headers->set('Content-Type', 'application/json');
+        return new JsonResponse($json);
+
+
+    }
+}
