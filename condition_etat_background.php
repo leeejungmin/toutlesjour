@@ -153,10 +153,12 @@ class DashboardController extends Controller
                     array_push($forfile,$file);
                 }
                 if($files && $forfile[0]){
+                    //make condition for etat background
                     $localData["etat"] = strtotime(date("Y-m-d H:i:s", $forfile[0]->getMTime()));
                     $nowTime = new DateTime();
-//make condition for etat background
-                    $diff=date_diff($nowTime,$localData["etat"]);
+                    $date = new DateTime();
+                    $date->setTimestamp($localData["etat"])->format("Y-m-d H:i:s");
+                    $diff=date_diff($nowTime,$date);
                     if(intval($diff->format('%d'))<1){
                         $localData["etatcondition"] = 'lessthan1day';
                     }elseif(intval($diff->format('%d'))==1 || intval($diff->format('%d'))<2){
